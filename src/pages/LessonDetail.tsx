@@ -37,7 +37,7 @@ export default function LessonDetail() {
       try {
         const qz = query(
           collection(db, `Modules/${moduleId}/Quizzes`),
-          orderBy("createdAt", "desc")
+          orderBy("createdAt", "desc"),
         );
         const snapshot = await getDocs(qz);
         if (!snapshot.empty) {
@@ -47,7 +47,7 @@ export default function LessonDetail() {
         console.error("Error fetching quiz", error);
       }
     };
-    
+
     fetchLessons();
     fetchQuiz();
   }, [moduleId]);

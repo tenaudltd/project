@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { History, Flag, BookOpen, MapPin } from "lucide-react";
+import { Flag, History } from "lucide-react";
 
 export default function About() {
   return (

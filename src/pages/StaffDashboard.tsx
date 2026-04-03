@@ -17,10 +17,10 @@ import type { Module } from "../lib/types";
 export default function StaffDashboard() {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"announcement" | "module" | "manage">(
-    "manage",
-  );
-  
+  const [activeTab, setActiveTab] = useState<
+    "announcement" | "module" | "manage"
+  >("manage");
+
   const [modules, setModules] = useState<Module[]>([]);
 
   // Announcement state
@@ -44,12 +44,19 @@ export default function StaffDashboard() {
   const fetchModules = async () => {
     try {
       const q = collection(db, "Modules"); // In a real app we might filter by createdBy
-      const querySnapshot = await import("firebase/firestore").then((m) => m.getDocs(q));
+      const querySnapshot = await import("firebase/firestore").then((m) =>
+        m.getDocs(q),
+      );
       const fetched: Module[] = [];
       querySnapshot.forEach((docSnap) => {
         fetched.push({ id: docSnap.id, ...docSnap.data() } as Module);
       });
-      setModules(fetched.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      setModules(
+        fetched.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        ),
+      );
     } catch (err) {
       console.error("Failed to fetch modules", err);
     }
@@ -93,9 +100,7 @@ export default function StaffDashboard() {
         createdBy: userProfile.uid,
         createdAt: new Date().toISOString(),
       });
-      setSuccessMsg(
-        "Module created successfully! Redirecting to manager...",
-      );
+      setSuccessMsg("Module created successfully! Redirecting to manager...");
       setModTitle("");
       setModDescription("");
       setTimeout(() => {
@@ -259,20 +264,28 @@ export default function StaffDashboard() {
 
         {activeTab === "manage" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Existing Modules</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Existing Modules
+            </h2>
             {modules.length === 0 ? (
-               <p className="text-gray-500 text-sm">No modules found. Create one to get started.</p>
+              <p className="text-gray-500 text-sm">
+                No modules found. Create one to get started.
+              </p>
             ) : (
               <div className="grid gap-4">
-                {modules.map(mod => (
-                  <Link 
-                    key={mod.id} 
+                {modules.map((mod) => (
+                  <Link
+                    key={mod.id}
                     to={`/staff/modules/${mod.id}`}
                     className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-colors group"
                   >
                     <div>
-                      <h3 className="font-semibold text-gray-900">{mod.title}</h3>
-                      <p className="text-sm text-gray-500 line-clamp-1">{mod.description}</p>
+                      <h3 className="font-semibold text-gray-900">
+                        {mod.title}
+                      </h3>
+                      <p className="text-sm text-gray-500 line-clamp-1">
+                        {mod.description}
+                      </p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary-600" />
                   </Link>

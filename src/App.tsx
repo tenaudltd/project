@@ -36,10 +36,7 @@ function App() {
           path="/modules/:id/lessons/:lessonId"
           element={<LessonDetail />}
         />
-        <Route
-          path="/modules/:id/quizzes/:quizId"
-          element={<QuizView />}
-        />
+        <Route path="/modules/:id/quizzes/:quizId" element={<QuizView />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

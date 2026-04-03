@@ -1,29 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
 import {
+  addDoc,
+  collection,
   doc,
   getDoc,
-  collection,
-  addDoc,
   getDocs,
-  query,
   orderBy,
+  query,
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
-import { useAuth } from "../contexts/AuthContext";
-import type { Module, Lesson, Quiz } from "../lib/types";
 import {
+  AlertCircle,
+  CheckCircle,
   ChevronLeft,
-  PlusCircle,
   FileText,
   HelpCircle,
-  CheckCircle,
-  AlertCircle,
+  PlusCircle,
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { db } from "../lib/firebase";
+import type { Lesson, Module, Quiz } from "../lib/types";
 
 export default function StaffModuleManager() {
   const { id: moduleId } = useParams<{ id: string }>();
-  const { userProfile } = useAuth();
+  // const { userProfile } = useAuth();
 
   const [moduleData, setModuleData] = useState<Module | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -70,7 +69,7 @@ export default function StaffModuleManager() {
     try {
       const q = query(
         collection(db, `Modules/${moduleId}/Lessons`),
-        orderBy("createdAt", "asc")
+        orderBy("createdAt", "asc"),
       );
       const querySnapshot = await getDocs(q);
       const fetched: Lesson[] = [];
@@ -88,11 +87,11 @@ export default function StaffModuleManager() {
     try {
       const q = query(
         collection(db, `Modules/${moduleId}/Quizzes`),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
-        // Just take the first quiz 
+        // Just take the first quiz
         const docSnap = querySnapshot.docs[0];
         setQuiz({ id: docSnap.id, ...docSnap.data() } as Quiz);
       }
@@ -151,7 +150,7 @@ export default function StaffModuleManager() {
         questions: formattedQuestions,
         createdAt: new Date().toISOString(),
       });
-      
+
       setSuccessMsg("Quiz created successfully.");
       fetchQuiz();
     } catch (err: any) {
@@ -178,7 +177,9 @@ export default function StaffModuleManager() {
   if (!moduleData) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="animate-pulse text-gray-400">Loading module data...</div>
+        <div className="animate-pulse text-gray-400">
+          Loading module data...
+        </div>
       </div>
     );
   }
@@ -244,9 +245,13 @@ export default function StaffModuleManager() {
         {activeTab === "lessons" && (
           <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Existing Lessons</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Existing Lessons
+              </h2>
               {lessons.length === 0 ? (
-                <p className="text-gray-500 text-sm">No lessons found. Add one below.</p>
+                <p className="text-gray-500 text-sm">
+                  No lessons found. Add one below.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {lessons.map((lesson, idx) => (
@@ -258,7 +263,9 @@ export default function StaffModuleManager() {
                         <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm">
                           {idx + 1}
                         </div>
-                        <h3 className="font-semibold text-gray-900">{lesson.title}</h3>
+                        <h3 className="font-semibold text-gray-900">
+                          {lesson.title}
+                        </h3>
                       </div>
                     </div>
                   ))}
@@ -269,9 +276,14 @@ export default function StaffModuleManager() {
             <hr className="border-gray-100" />
 
             <form onSubmit={handleCreateLesson} className="space-y-6">
-              <h2 className="text-xl font-bold text-gray-900">Add New Lesson</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Add New Lesson
+              </h2>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="lesTitle">
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="lesTitle"
+                >
                   Lesson Title
                 </label>
                 <input
@@ -285,7 +297,10 @@ export default function StaffModuleManager() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="lesContent">
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="lesContent"
+                >
                   Lesson Content (Markdown Supported)
                 </label>
                 <textarea
@@ -320,12 +335,18 @@ export default function StaffModuleManager() {
                     <CheckCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">Quiz Already Configured</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">
+                      Quiz Already Configured
+                    </h2>
                     <p className="text-gray-600 mb-4">
-                      This module has a quiz: <strong className="font-semibold text-gray-900">{quiz.title}</strong>
+                      This module has a quiz:{" "}
+                      <strong className="font-semibold text-gray-900">
+                        {quiz.title}
+                      </strong>
                     </p>
                     <p className="text-sm text-gray-500">
-                      It contains {quiz.totalMarks} questions. In this version of the platform, editing an existing quiz is disabled.
+                      It contains {quiz.totalMarks} questions. In this version
+                      of the platform, editing an existing quiz is disabled.
                     </p>
                   </div>
                 </div>
@@ -333,9 +354,16 @@ export default function StaffModuleManager() {
             ) : (
               <form onSubmit={handleCreateQuiz} className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Create Module Assessment</h2>
-                  <p className="text-sm text-gray-500 mb-6">Add a quiz to assess learner understanding.</p>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="quizTitle">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                    Create Module Assessment
+                  </h2>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Add a quiz to assess learner understanding.
+                  </p>
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="quizTitle"
+                  >
                     Assessment Title
                   </label>
                   <input
@@ -350,9 +378,14 @@ export default function StaffModuleManager() {
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="font-semibold text-gray-900 border-b border-gray-100 pb-2">Questions</h3>
+                  <h3 className="font-semibold text-gray-900 border-b border-gray-100 pb-2">
+                    Questions
+                  </h3>
                   {questions.map((q, qIndex) => (
-                    <div key={qIndex} className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                    <div
+                      key={qIndex}
+                      className="p-6 bg-gray-50 rounded-xl border border-gray-200"
+                    >
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Question {qIndex + 1}
@@ -362,29 +395,48 @@ export default function StaffModuleManager() {
                           required
                           className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                           value={q.questionText}
-                          onChange={(e) => updateQuestion(qIndex, "questionText", e.target.value)}
+                          onChange={(e) =>
+                            updateQuestion(
+                              qIndex,
+                              "questionText",
+                              e.target.value,
+                            )
+                          }
                           placeholder="What is the primary function of the council?"
                         />
                       </div>
-                      
+
                       <div className="grid md:grid-cols-2 gap-4">
                         {q.options.map((opt, optIndex) => (
-                          <div key={optIndex} className="flex items-center gap-2">
+                          <div
+                            key={optIndex}
+                            className="flex items-center gap-2"
+                          >
                             <input
                               type="radio"
                               name={`correct-${qIndex}`}
                               checked={q.correctAnswer === optIndex}
-                              onChange={() => updateQuestion(qIndex, "correctAnswer", optIndex)}
+                              onChange={() =>
+                                updateQuestion(
+                                  qIndex,
+                                  "correctAnswer",
+                                  optIndex,
+                                )
+                              }
                               className="w-4 h-4 text-primary-600 focus:ring-primary-500"
                             />
                             <input
                               type="text"
                               required
                               className={`flex-1 rounded-lg border px-3 py-1.5 text-sm ${
-                                q.correctAnswer === optIndex ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-white"
+                                q.correctAnswer === optIndex
+                                  ? "border-primary-500 bg-primary-50"
+                                  : "border-gray-300 bg-white"
                               }`}
                               value={opt}
-                              onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
+                              onChange={(e) =>
+                                updateOption(qIndex, optIndex, e.target.value)
+                              }
                               placeholder={`Option ${optIndex + 1}`}
                             />
                           </div>
@@ -392,18 +444,27 @@ export default function StaffModuleManager() {
                       </div>
                     </div>
                   ))}
-                  
+
                   <button
                     type="button"
                     className="text-primary-600 font-medium text-sm hover:text-primary-700 flex items-center gap-1"
-                    onClick={() => setQuestions([...questions, { questionText: "", options: ["", "", "", ""], correctAnswer: 0 }])}
+                    onClick={() =>
+                      setQuestions([
+                        ...questions,
+                        {
+                          questionText: "",
+                          options: ["", "", "", ""],
+                          correctAnswer: 0,
+                        },
+                      ])
+                    }
                   >
                     <PlusCircle className="w-4 h-4" /> Add Another Question
                   </button>
                 </div>
 
                 <hr className="border-gray-100" />
-                
+
                 <button
                   type="submit"
                   disabled={loading}

@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { BookOpen, CheckCircle, Clock, Bell } from "lucide-react";
-import { collection, query, getDocs, limit, orderBy, where } from "firebase/firestore";
+import {
+  collection,
+  query,
+  getDocs,
+  limit,
+  orderBy,
+  where,
+} from "firebase/firestore";
 import { db } from "../lib/firebase";
 import type { Announcement } from "../lib/types";
 
@@ -34,7 +41,10 @@ export default function Dashboard() {
     const fetchStats = async () => {
       if (!userProfile?.uid) return;
       try {
-        const qStats = query(collection(db, "Results"), where("userId", "==", userProfile.uid));
+        const qStats = query(
+          collection(db, "Results"),
+          where("userId", "==", userProfile.uid),
+        );
         const resSnap = await getDocs(qStats);
         setCompletedQuizzes(resSnap.size);
       } catch (error) {
@@ -79,7 +89,9 @@ export default function Dashboard() {
             <p className="text-sm font-medium text-gray-500">
               Quizzes Completed
             </p>
-            <p className="text-2xl font-bold text-gray-900">{completedQuizzes}</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {completedQuizzes}
+            </p>
           </div>
         </div>
 
