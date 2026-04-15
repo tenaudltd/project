@@ -36,6 +36,12 @@ export default function Home() {
                   Start Learning Now
                 </Link>
                 <Link
+                  to="/login"
+                  className="rounded-xl px-8 py-4 bg-white text-gray-700 font-semibold border-2 border-gray-200 hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 text-lg flex items-center justify-center"
+                >
+                  Demo login
+                </Link>
+                <Link
                   to="/about"
                   className="rounded-xl px-8 py-4 bg-white text-gray-700 font-semibold border-2 border-gray-200 hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 text-lg flex items-center justify-center"
                 >
@@ -124,10 +130,20 @@ export default function Home() {
               Empowering citizens through accessible governance information.
             </p>
           </div>
-          <p className="text-sm">
-            © {new Date().getFullYear()} Mushindamo Town Council. All rights
-            reserved.
-          </p>
+          <div className="flex flex-col items-center gap-3 text-sm md:items-end">
+            <div className="flex flex-wrap justify-center gap-4 md:justify-end">
+              <Link to="/help" className="text-gray-300 hover:text-white">
+                Help &amp; FAQ
+              </Link>
+              <Link to="/about" className="text-gray-300 hover:text-white">
+                About
+              </Link>
+            </div>
+            <p>
+              © {new Date().getFullYear()} Mushindamo Town Council. All rights
+              reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

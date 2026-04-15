@@ -28,7 +28,7 @@ export default function Feedback() {
       setSuccess(true);
       setMessage("");
       setTimeout(() => setSuccess(false), 5000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error submitting feedback:", err);
       setError("Failed to submit feedback. Please try again.");
     } finally {

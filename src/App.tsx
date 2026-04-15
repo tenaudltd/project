@@ -15,6 +15,8 @@ import {
   Settings,
   StaffModuleManager,
   QuizView,
+  Help,
+  Certificate,
 } from "./pages";
 
 function App() {
@@ -26,6 +28,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/help" element={<Help />} />
       </Route>
 
       {/* Protected Routes - All Authenticated Users */}
@@ -37,6 +40,7 @@ function App() {
           element={<LessonDetail />}
         />
         <Route path="/modules/:id/quizzes/:quizId" element={<QuizView />} />
+        <Route path="/modules/:id/certificate" element={<Certificate />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

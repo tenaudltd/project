@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { collection, addDoc } from "firebase/firestore";
+import React, { useCallback, useEffect, useState } from "react";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -35,18 +35,10 @@ export default function StaffDashboard() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  React.useEffect(() => {
-    if (activeTab === "manage") {
-      fetchModules();
-    }
-  }, [activeTab]);
-
-  const fetchModules = async () => {
+  const fetchModules = useCallback(async () => {
     try {
-      const q = collection(db, "Modules"); // In a real app we might filter by createdBy
-      const querySnapshot = await import("firebase/firestore").then((m) =>
-        m.getDocs(q),
-      );
+      const q = collection(db, "Modules");
+      const querySnapshot = await getDocs(q);
       const fetched: Module[] = [];
       querySnapshot.forEach((docSnap) => {
         fetched.push({ id: docSnap.id, ...docSnap.data() } as Module);
@@ -60,7 +52,13 @@ export default function StaffDashboard() {
     } catch (err) {
       console.error("Failed to fetch modules", err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "manage") {
+      fetchModules();
+    }
+  }, [activeTab, fetchModules]);
 
   const handleCreateAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +76,7 @@ export default function StaffDashboard() {
       setSuccessMsg("Announcement posted successfully!");
       setAnnTitle("");
       setAnnMessage("");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg("Failed to create announcement.");
       console.error(err);
     } finally {
@@ -106,7 +104,7 @@ export default function StaffDashboard() {
       setTimeout(() => {
         navigate(`/staff/modules/${docRef.id}`);
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg("Failed to create module.");
       console.error(err);
       setLoading(false);

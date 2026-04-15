@@ -42,8 +42,10 @@ export default function Register() {
 
       await setDoc(doc(db, "Users", user.uid), userProfile);
       navigate("/dashboard", { replace: true });
-    } catch (err: any) {
-      setError(err.message || "Failed to create an account.");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to create an account.";
+      setError(message);
     } finally {
       setLoading(false);
     }

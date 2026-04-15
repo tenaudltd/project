@@ -1,61 +1,13 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import {
-  BookOpen,
-  Home,
-  Bell,
-  MessageSquare,
-  Settings,
-  Users,
-  LayoutDashboard,
-} from "lucide-react";
+import { mainNavItems } from "../../lib/navigation";
 import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export default function Sidebar() {
   const { userProfile } = useAuth();
 
-  const links = [
-    {
-      to: "/dashboard",
-      label: "Dashboard",
-      icon: Home,
-      roles: ["learner", "staff", "admin"],
-    },
-    {
-      to: "/modules",
-      label: "Modules",
-      icon: BookOpen,
-      roles: ["learner", "staff", "admin"],
-    },
-    {
-      to: "/announcements",
-      label: "Announcements",
-      icon: Bell,
-      roles: ["learner", "staff", "admin"],
-    },
-    {
-      to: "/feedback",
-      label: "Feedback",
-      icon: MessageSquare,
-      roles: ["learner"],
-    },
-    {
-      to: "/staff",
-      label: "Staff Panel",
-      icon: LayoutDashboard,
-      roles: ["staff", "admin"],
-    },
-    { to: "/admin", label: "User Management", icon: Users, roles: ["admin"] },
-    {
-      to: "/settings",
-      label: "Settings",
-      icon: Settings,
-      roles: ["learner", "staff", "admin"],
-    },
-  ];
-
-  const allowedLinks = links.filter(
+  const allowedLinks = mainNavItems.filter(
     (link) => !userProfile || link.roles.includes(userProfile.role),
   );
 

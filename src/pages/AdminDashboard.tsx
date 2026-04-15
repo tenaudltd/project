@@ -2,21 +2,55 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import type { UserProfile } from "../lib/types";
-import { Users, Shield, Loader2, CheckCircle } from "lucide-react";
+import {
+  Users,
+  Shield,
+  Loader2,
+  CheckCircle,
+  BarChart3,
+  BookOpen,
+  ClipboardList,
+  MessageSquare,
+  Megaphone,
+} from "lucide-react";
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState("");
+  const [stats, setStats] = useState({
+    modules: 0,
+    results: 0,
+    feedback: 0,
+    announcements: 0,
+  });
 
   const fetchUsers = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "Users"));
+      const [
+        usersSnap,
+        modulesSnap,
+        resultsSnap,
+        feedbackSnap,
+        announcementsSnap,
+      ] = await Promise.all([
+        getDocs(collection(db, "Users")),
+        getDocs(collection(db, "Modules")),
+        getDocs(collection(db, "Results")),
+        getDocs(collection(db, "Feedback")),
+        getDocs(collection(db, "Announcements")),
+      ]);
       const fetched: UserProfile[] = [];
-      querySnapshot.forEach((docSnap) => {
+      usersSnap.forEach((docSnap) => {
         fetched.push({ uid: docSnap.id, ...docSnap.data() } as UserProfile);
       });
       setUsers(fetched);
+      setStats({
+        modules: modulesSnap.size,
+        results: resultsSnap.size,
+        feedback: feedbackSnap.size,
+        announcements: announcementsSnap.size,
+      });
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -49,6 +83,64 @@ export default function AdminDashboard() {
         <p className="mt-2 text-gray-600">
           Manage all registered users and assign platform roles securely.
         </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {[
+          {
+            label: "Registered users",
+            value: users.length,
+            icon: Users,
+            color: "text-primary-600 bg-primary-50",
+          },
+          {
+            label: "Modules",
+            value: stats.modules,
+            icon: BookOpen,
+            color: "text-emerald-600 bg-emerald-50",
+          },
+          {
+            label: "Quiz attempts",
+            value: stats.results,
+            icon: ClipboardList,
+            color: "text-violet-600 bg-violet-50",
+          },
+          {
+            label: "Feedback items",
+            value: stats.feedback,
+            icon: MessageSquare,
+            color: "text-amber-600 bg-amber-50",
+          },
+          {
+            label: "Announcements",
+            value: stats.announcements,
+            icon: Megaphone,
+            color: "text-sky-600 bg-sky-50",
+          },
+        ].map((card) => (
+          <div
+            key={card.label}
+            className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+          >
+            <div
+              className={`flex h-11 w-11 items-center justify-center rounded-lg ${card.color}`}
+            >
+              <card.icon className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+              <p className="text-xs font-medium text-gray-500">{card.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-600">
+        <BarChart3 className="h-5 w-5 text-gray-400" />
+        <span>
+          Analytics are computed live from Firestore for this prototype
+          presentation.
+        </span>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

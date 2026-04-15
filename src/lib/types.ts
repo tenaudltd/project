@@ -64,3 +64,9 @@ export interface Feedback {
   message: string;
   dateSubmitted: string;
 }
+
+export interface ModuleProgress {
+  moduleId: string;
+  completedLessonIds: string[];
+  updatedAt: string;
+}

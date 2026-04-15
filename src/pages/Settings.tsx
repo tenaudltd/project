@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,18 +10,30 @@ import {
 } from "lucide-react";
 
 export default function Settings() {
-  const { userProfile } = useAuth();
+  const { userProfile, isDemoSession } = useAuth();
   const [fullName, setFullName] = useState(userProfile?.fullName || "");
   const [phoneNumber, setPhoneNumber] = useState(
     userProfile?.phoneNumber || "",
   );
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userProfile) return;
+    setFullName(userProfile.fullName || "");
+    setPhoneNumber(userProfile.phoneNumber || "");
+  }, [userProfile]);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userProfile) return;
+    if (isDemoSession) {
+      setError("");
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -35,7 +47,7 @@ export default function Settings() {
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error updating profile:", err);
       setError("Failed to update profile. Please try again.");
     } finally {
@@ -62,10 +74,21 @@ export default function Settings() {
           </h2>
         </div>
 
+        {isDemoSession && (
+          <div className="mb-6 rounded-lg border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900">
+            Demo mode: profile changes stay on this page only and are not saved
+            to the server.
+          </div>
+        )}
+
         {success && (
           <div className="mb-6 bg-green-50 text-green-700 p-4 rounded-lg flex items-start gap-3 border border-green-100">
             <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-medium">Profile updated successfully!</p>
+            <p className="text-sm font-medium">
+              {isDemoSession
+                ? "Demo mode — nothing was saved."
+                : "Profile updated successfully!"}
+            </p>
           </div>
         )}
 

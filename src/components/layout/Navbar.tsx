@@ -4,10 +4,12 @@ import { LogOut, Menu, UserCircle } from "lucide-react";
 
 export default function Navbar({
   showSidebarToggle,
+  onMobileMenuOpen,
 }: {
   showSidebarToggle: boolean;
+  onMobileMenuOpen?: () => void;
 }) {
-  const { currentUser, userProfile, signOut } = useAuth();
+  const { currentUser, userProfile, signOut, isDemoSession } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -22,8 +24,13 @@ export default function Navbar({
   return (
     <header className="sticky top-0 z-30 flex w-full h-16 items-center justify-between bg-white px-4 shadow-sm md:px-6">
       <div className="flex items-center gap-4">
-        {showSidebarToggle && (
-          <button className="text-gray-500 focus:outline-none lg:hidden">
+        {showSidebarToggle && onMobileMenuOpen && (
+          <button
+            type="button"
+            onClick={onMobileMenuOpen}
+            className="text-gray-500 focus:outline-none lg:hidden"
+            aria-label="Open navigation menu"
+          >
             <Menu className="h-6 w-6" />
           </button>
         )}
@@ -40,6 +47,12 @@ export default function Navbar({
       <div className="flex items-center gap-4">
         {!currentUser ? (
           <>
+            <Link
+              to="/help"
+              className="hidden text-sm font-medium text-gray-700 hover:text-primary-600 sm:block"
+            >
+              Help
+            </Link>
             <Link
               to="/about"
               className="hidden text-sm font-medium text-gray-700 hover:text-primary-600 sm:block"
@@ -61,10 +74,17 @@ export default function Navbar({
           </>
         ) : (
           <div className="flex items-center gap-4 text-sm">
-            <span className="hidden text-gray-700 md:block">
-              Welcome,{" "}
-              <span className="font-semibold">
-                {userProfile?.fullName || "User"}
+            <span className="hidden items-center gap-2 text-gray-700 md:flex">
+              {isDemoSession && (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                  Demo
+                </span>
+              )}
+              <span>
+                Welcome,{" "}
+                <span className="font-semibold">
+                  {userProfile?.fullName || "User"}
+                </span>
               </span>
             </span>
             <div className="relative group">

@@ -13,3 +13,5 @@ export { default as AdminDashboard } from "./AdminDashboard";
 export { default as Settings } from "./Settings";
 export { default as StaffModuleManager } from "./StaffModuleManager";
 export { default as QuizView } from "./QuizView";
+export { default as Help } from "./Help";
+export { default as Certificate } from "./Certificate";

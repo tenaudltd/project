@@ -15,7 +15,7 @@ import {
   HelpCircle,
   PlusCircle,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { db } from "../lib/firebase";
 import type { Lesson, Module, Quiz } from "../lib/types";
@@ -25,6 +25,9 @@ export default function StaffModuleManager() {
   // const { userProfile } = useAuth();
 
   const [moduleData, setModuleData] = useState<Module | null>(null);
+  const [moduleLoadState, setModuleLoadState] = useState<
+    "loading" | "ok" | "missing"
+  >("loading");
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
 
@@ -44,27 +47,26 @@ export default function StaffModuleManager() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  useEffect(() => {
-    if (moduleId) {
-      fetchModuleData();
-      fetchLessons();
-      fetchQuiz();
-    }
-  }, [moduleId]);
-
-  const fetchModuleData = async () => {
+  const fetchModuleData = useCallback(async () => {
     if (!moduleId) return;
+    setModuleLoadState("loading");
     try {
       const docSnap = await getDoc(doc(db, "Modules", moduleId));
       if (docSnap.exists()) {
         setModuleData({ id: docSnap.id, ...docSnap.data() } as Module);
+        setModuleLoadState("ok");
+      } else {
+        setModuleData(null);
+        setModuleLoadState("missing");
       }
     } catch (err) {
       console.error("Error fetching module", err);
+      setModuleData(null);
+      setModuleLoadState("missing");
     }
-  };
+  }, [moduleId]);
 
-  const fetchLessons = async () => {
+  const fetchLessons = useCallback(async () => {
     if (!moduleId) return;
     try {
       const q = query(
@@ -80,9 +82,9 @@ export default function StaffModuleManager() {
     } catch (err) {
       console.error("Error fetching lessons", err);
     }
-  };
+  }, [moduleId]);
 
-  const fetchQuiz = async () => {
+  const fetchQuiz = useCallback(async () => {
     if (!moduleId) return;
     try {
       const q = query(
@@ -91,14 +93,23 @@ export default function StaffModuleManager() {
       );
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
-        // Just take the first quiz
         const docSnap = querySnapshot.docs[0];
         setQuiz({ id: docSnap.id, ...docSnap.data() } as Quiz);
       }
     } catch (err) {
       console.error("Error fetching quiz", err);
     }
-  };
+  }, [moduleId]);
+
+  useEffect(() => {
+    if (!moduleId) {
+      setModuleLoadState("missing");
+      return;
+    }
+    void fetchModuleData();
+    void fetchLessons();
+    void fetchQuiz();
+  }, [moduleId, fetchModuleData, fetchLessons, fetchQuiz]);
 
   const handleCreateLesson = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +128,7 @@ export default function StaffModuleManager() {
       setLesTitle("");
       setLesContent("");
       fetchLessons();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg("Failed to add lesson.");
       console.error(err);
     } finally {
@@ -153,7 +164,7 @@ export default function StaffModuleManager() {
 
       setSuccessMsg("Quiz created successfully.");
       fetchQuiz();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg("Failed to create quiz.");
       console.error(err);
     } finally {
@@ -162,9 +173,19 @@ export default function StaffModuleManager() {
     }
   };
 
-  const updateQuestion = (index: number, field: string, value: any) => {
+  const updateQuestion = (
+    index: number,
+    field: "questionText" | "correctAnswer",
+    value: string | number,
+  ) => {
     const updated = [...questions];
-    (updated[index] as any)[field] = value;
+    const row = { ...updated[index] };
+    if (field === "questionText") {
+      row.questionText = value as string;
+    } else {
+      row.correctAnswer = value as number;
+    }
+    updated[index] = row;
     setQuestions(updated);
   };
 
@@ -174,12 +195,31 @@ export default function StaffModuleManager() {
     setQuestions(updated);
   };
 
-  if (!moduleData) {
+  if (moduleLoadState === "loading") {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="animate-pulse text-gray-400">
           Loading module data...
         </div>
+      </div>
+    );
+  }
+
+  if (moduleLoadState === "missing" || !moduleData) {
+    return (
+      <div className="mx-auto max-w-lg rounded-xl border border-gray-100 bg-white p-12 text-center shadow-sm">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Module not found
+        </h2>
+        <p className="mt-2 text-gray-500">
+          This module does not exist or was removed.
+        </p>
+        <Link
+          to="/staff"
+          className="mt-6 inline-block font-medium text-primary-600 hover:text-primary-700"
+        >
+          &larr; Back to Staff Portal
+        </Link>
       </div>
     );
   }

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   collection,
   getDocs,
@@ -28,13 +28,11 @@ export default function QuizView() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchQuiz();
-    checkIfAlreadyTaken();
-  }, [moduleId, quizId]);
-
-  const fetchQuiz = async () => {
-    if (!moduleId || !quizId) return;
+  const fetchQuiz = useCallback(async () => {
+    if (!moduleId || !quizId) {
+      setLoading(false);
+      return;
+    }
     try {
       const docSnap = await getDoc(
         doc(db, `Modules/${moduleId}/Quizzes/${quizId}`),
@@ -50,9 +48,9 @@ export default function QuizView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [moduleId, quizId]);
 
-  const checkIfAlreadyTaken = async () => {
+  const checkIfAlreadyTaken = useCallback(async () => {
     if (!quizId || !userProfile) return;
     try {
       const q = query(
@@ -63,12 +61,21 @@ export default function QuizView() {
       const snapshot = await getDocs(q);
       if (!snapshot.empty) {
         setIsSubmitted(true);
-        setScore(snapshot.docs[0].data().score);
+        setScore(snapshot.docs[0].data().score as number);
       }
     } catch (err) {
       console.error("Error checking past results", err);
     }
-  };
+  }, [quizId, userProfile]);
+
+  useEffect(() => {
+    setLoading(true);
+    void fetchQuiz();
+  }, [fetchQuiz]);
+
+  useEffect(() => {
+    void checkIfAlreadyTaken();
+  }, [checkIfAlreadyTaken]);
 
   const handleSelectOption = (questionId: string, optionIndex: number) => {
     if (isSubmitted) return;
@@ -153,8 +160,8 @@ export default function QuizView() {
               {quiz.title}
             </h1>
             <p className="text-gray-600 border-l-2 border-primary-200 pl-3">
-              This assessment contains {quiz.totalMarks} questions. Please read
-              each carefully before answering.
+              This assessment contains {quiz.questions.length} questions. Please
+              read each carefully before answering.
             </p>
           </div>
         </div>
@@ -185,8 +192,17 @@ export default function QuizView() {
                 {score}%
               </span>
             </div>
-            <div>
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              {moduleId && quizId && (
+                <Link
+                  to={`/modules/${moduleId}/certificate?quiz=${encodeURIComponent(quizId)}`}
+                  className="rounded-lg border-2 border-primary-600 bg-white px-8 py-3 font-medium text-primary-700 hover:bg-primary-50 transition-colors"
+                >
+                  View certificate
+                </Link>
+              )}
               <button
+                type="button"
                 onClick={() => navigate(`/dashboard`)}
                 className="bg-primary-600 text-white rounded-lg px-8 py-3 font-medium hover:bg-primary-700 transition-colors"
               >

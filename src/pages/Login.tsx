@@ -24,21 +24,23 @@ export default function Login() {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(
-        err.message || "Failed to sign in. Please check your credentials.",
-      );
+    } catch (caught: unknown) {
+      const message =
+        caught instanceof Error
+          ? caught.message
+          : "Failed to sign in. Please check your credentials.";
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDemoLogin = (role: "admin" | "staff" | "learner") => {
+  const handleDemoLogin = async (role: "admin" | "staff" | "learner") => {
     try {
       setError("");
-      demoLogin(role);
+      await demoLogin(role);
       navigate(from, { replace: true });
-    } catch (err: any) {
+    } catch {
       setError("Failed to initialize demo session.");
     }
   };
@@ -52,7 +54,8 @@ export default function Login() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
           <p className="text-gray-500 mt-2 text-center text-sm">
-            Sign in to continue your civic education journey.
+            Sign in to continue your civic education journey. Use the demo
+            buttons below to explore without creating an account.
           </p>
         </div>
 

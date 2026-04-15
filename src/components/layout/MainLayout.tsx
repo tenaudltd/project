@@ -1,5 +1,7 @@
+import { useCallback, useState } from "react";
 import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import MobileNavDrawer from "./MobileNavDrawer";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 
@@ -12,6 +14,8 @@ export default function MainLayout({
 }) {
   const { currentUser, userProfile, loading } = useAuth();
   const location = useLocation();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
 
   if (loading) {
     return (
@@ -42,8 +46,16 @@ export default function MainLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {requiresAuth && <Sidebar />}
+      {requiresAuth && (
+        <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
+      )}
       <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-        <Navbar showSidebarToggle={requiresAuth} />
+        <Navbar
+          showSidebarToggle={requiresAuth}
+          onMobileMenuOpen={
+            requiresAuth ? () => setMobileNavOpen(true) : undefined
+          }
+        />
         <main className="w-full h-full p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
