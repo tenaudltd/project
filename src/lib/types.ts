@@ -52,6 +52,7 @@ export interface QuizResult {
   id: string;
   userId: string;
   quizId: string;
+  moduleId?: string;
   score: number;
   correctAnswers?: number;
   minimumPassCount?: number;

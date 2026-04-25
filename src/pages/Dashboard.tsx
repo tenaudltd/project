@@ -21,7 +21,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { db } from "../lib/firebase";
 import { getBookmarkedModuleIds } from "../lib/bookmarksLocal";
 import { resolveModuleLessonCounts } from "../lib/moduleMetadata";
-import type { Announcement, Module } from "../lib/types";
+import type { Announcement, Module, QuizResult } from "../lib/types";
 import { listUserModuleProgress } from "../lib/moduleProgress";
 
 export default function Dashboard() {
@@ -36,6 +36,8 @@ export default function Dashboard() {
     id: string;
     title: string;
     pct: number;
+    action: "resume" | "certificate";
+    quizId?: string;
   } | null>(null);
   const [bookmarks, setBookmarks] = useState(0);
 
@@ -67,6 +69,23 @@ export default function Dashboard() {
         );
         const resSnap = await getDocs(qStats);
         setCompletedQuizzes(resSnap.size);
+        const results = resSnap.docs.map(
+          (docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as QuizResult,
+        );
+        const latestPassedResultByModule = new Map<string, QuizResult>();
+        for (const result of results) {
+          if (!result.passed || !("moduleId" in result) || typeof result.moduleId !== "string") {
+            continue;
+          }
+          const previous = latestPassedResultByModule.get(result.moduleId);
+          if (
+            !previous ||
+            new Date(result.dateTaken).getTime() >
+              new Date(previous.dateTaken).getTime()
+          ) {
+            latestPassedResultByModule.set(result.moduleId, result);
+          }
+        }
 
         const progressList = await listUserModuleProgress(userProfile.uid);
         let lessonSum = 0;
@@ -88,15 +107,34 @@ export default function Dashboard() {
         });
         const fallbackLessonCounts = await resolveModuleLessonCounts(modules);
 
-        let best: { id: string; title: string; pct: number } | null = null;
+        let best: {
+          id: string;
+          title: string;
+          pct: number;
+          action: "resume" | "certificate";
+          quizId?: string;
+        } | null = null;
         for (const module of modules) {
           const progress = progressList.find((item) => item.moduleId === module.id);
           const done = progress?.completedLessonIds?.length ?? 0;
           const total = module.lessonCount ?? fallbackLessonCounts[module.id] ?? 0;
           if (total === 0) continue;
           const pct = Math.round((done / total) * 100);
-          if (pct < 100 && (best === null || pct > best.pct)) {
-            best = { id: module.id, title: module.title, pct };
+          const passedResult = latestPassedResultByModule.get(module.id);
+          if (pct < 100 && (best === null || best.action === "certificate" || pct > best.pct)) {
+            best = { id: module.id, title: module.title, pct, action: "resume" };
+          } else if (
+            pct >= 100 &&
+            passedResult &&
+            best === null
+          ) {
+            best = {
+              id: module.id,
+              title: module.title,
+              pct: 100,
+              action: "certificate",
+              quizId: passedResult.quizId,
+            };
           }
         }
 
@@ -105,10 +143,18 @@ export default function Dashboard() {
           const progress = progressList.find((item) => item.moduleId === module.id);
           const done = progress?.completedLessonIds?.length ?? 0;
           const total = module.lessonCount ?? fallbackLessonCounts[module.id] ?? 0;
+          const passedResult = latestPassedResultByModule.get(module.id);
           best = {
             id: module.id,
             title: module.title,
             pct: total > 0 ? Math.round((done / total) * 100) : 0,
+            action:
+              total > 0 &&
+              done >= total &&
+              Boolean(passedResult?.quizId)
+                ? "certificate"
+                : "resume",
+            quizId: passedResult?.quizId,
           };
         }
 
@@ -205,13 +251,25 @@ export default function Dashboard() {
               <p className="mt-3 text-sm text-ink-600">
                 {continueModule.pct}% complete
               </p>
-              <Link
-                to={`/modules/${continueModule.id}/lessons/start`}
-                className="button-primary mt-5 gap-2"
-              >
-                Resume module
-                <ChevronRight className="h-4 w-4" />
-              </Link>
+              {continueModule.action === "certificate" && continueModule.quizId ? (
+                <Link
+                  to={`/modules/${continueModule.id}/certificate?quiz=${encodeURIComponent(
+                    continueModule.quizId,
+                  )}`}
+                  className="button-primary mt-5 gap-2"
+                >
+                  View certificate
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              ) : (
+                <Link
+                  to={`/modules/${continueModule.id}/lessons/start`}
+                  className="button-primary mt-5 gap-2"
+                >
+                  Resume module
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
           ) : (
             <div className="mt-5 rounded-2xl border border-dashed border-ink-200 bg-slate-50 p-5">
