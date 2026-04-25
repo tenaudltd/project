@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { doc, getDoc, query, collection, where, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
-import type { Module } from "../lib/types";
+import type { Module, QuizResult } from "../lib/types";
 import { Award, ChevronLeft, Printer } from "lucide-react";
 
 export default function Certificate() {
@@ -15,6 +15,7 @@ export default function Certificate() {
   const [moduleTitle, setModuleTitle] = useState("");
   const [score, setScore] = useState<number | null>(null);
   const [issuedAt, setIssuedAt] = useState("");
+  const [passed, setPassed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
 
@@ -40,8 +41,15 @@ export default function Certificate() {
         if (res.empty) {
           setMissing(true);
         } else {
-          const row = res.docs[0].data();
+          const attempts = res.docs
+            .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() } as QuizResult))
+            .sort(
+              (a, b) =>
+                new Date(b.dateTaken).getTime() - new Date(a.dateTaken).getTime(),
+            );
+          const row = attempts.find((attempt) => attempt.passed) ?? attempts[0];
           setScore(typeof row.score === "number" ? row.score : 0);
+          setPassed(Boolean(row.passed));
           setIssuedAt(
             typeof row.dateTaken === "string"
               ? row.dateTaken
@@ -66,12 +74,12 @@ export default function Certificate() {
     );
   }
 
-  if (missing || score === null) {
+  if (missing || score === null || !passed) {
     return (
       <div className="mx-auto max-w-lg rounded-xl border border-gray-100 bg-white p-10 text-center shadow-sm">
         <p className="text-gray-600">
-          Certificate not available. Complete the module quiz first, or check
-          the link.
+          Certificate not available. Pass the module quiz first, or check the
+          link.
         </p>
         <Link
           to="/modules"

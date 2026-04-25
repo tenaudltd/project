@@ -76,6 +76,12 @@ export default function StaffModuleManager() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const minimumPassCount = Math.max(
+    1,
+    Math.ceil((questions.length * 2) / 3),
+  );
+  const passingPercentage = Math.round((minimumPassCount / questions.length) * 100);
+
   const fetchModuleData = useCallback(async () => {
     if (!moduleId) return;
     setModuleLoadState("loading");
@@ -215,6 +221,7 @@ export default function StaffModuleManager() {
         moduleId,
         title: quizTitle.trim(),
         totalMarks: formattedQuestions.length,
+        minimumPassCount,
         questions: formattedQuestions,
         createdAt,
         isPaused: false,
@@ -230,6 +237,7 @@ export default function StaffModuleManager() {
         moduleId,
         title: quizTitle.trim(),
         totalMarks: formattedQuestions.length,
+        minimumPassCount,
         questions: formattedQuestions,
         createdAt,
         isPaused: false,
@@ -765,6 +773,9 @@ export default function StaffModuleManager() {
                       <span className="text-sm text-gray-500">
                         {quiz.totalMarks} questions
                       </span>
+                      <span className="text-sm text-gray-500">
+                        Pass mark: {quiz.minimumPassCount ?? Math.ceil((quiz.totalMarks * 2) / 3)}/{quiz.totalMarks}
+                      </span>
                     </div>
                     <div className="flex flex-wrap gap-3">
                       <button
@@ -853,6 +864,13 @@ export default function StaffModuleManager() {
                 </div>
 
                 <div className="space-y-6">
+                  <div className="rounded-lg border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-900">
+                    Learners must get at least{" "}
+                    <span className="font-semibold">
+                      {minimumPassCount}/{questions.length}
+                    </span>{" "}
+                    correct to pass ({passingPercentage}%).
+                  </div>
                   <h3 className="font-semibold text-gray-900 border-b border-gray-100 pb-2">
                     Questions
                   </h3>

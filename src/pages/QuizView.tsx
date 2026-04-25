@@ -11,7 +11,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
-import type { Quiz, Question } from "../lib/types";
+import type { Question, Quiz, QuizResult } from "../lib/types";
 import { HelpCircle, CheckCircle, AlertCircle, Award } from "lucide-react";
 
 export default function QuizView() {
@@ -23,6 +23,9 @@ export default function QuizView() {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [passed, setPassed] = useState(false);
+  const [lastAttempt, setLastAttempt] = useState<QuizResult | null>(null);
 
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(true);
@@ -59,9 +62,23 @@ export default function QuizView() {
         where("userId", "==", userProfile.uid),
       );
       const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
+      if (snapshot.empty) {
+        setLastAttempt(null);
+        return;
+      }
+      const attempts = snapshot.docs
+        .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() } as QuizResult))
+        .sort(
+          (a, b) =>
+            new Date(b.dateTaken).getTime() - new Date(a.dateTaken).getTime(),
+        );
+      const latestAttempt = attempts[0];
+      setLastAttempt(latestAttempt);
+      if (latestAttempt.passed) {
         setIsSubmitted(true);
-        setScore(snapshot.docs[0].data().score as number);
+        setScore(latestAttempt.score);
+        setCorrectAnswers(latestAttempt.correctAnswers ?? 0);
+        setPassed(true);
       }
     } catch (err) {
       console.error("Error checking past results", err);
@@ -103,6 +120,9 @@ export default function QuizView() {
     });
 
     const finalScore = Math.round((correctCount / quiz.questions.length) * 100);
+    const requiredToPass =
+      quiz.minimumPassCount ?? Math.ceil((quiz.questions.length * 2) / 3);
+    const didPass = correctCount >= requiredToPass;
 
     try {
       await addDoc(collection(db, "Results"), {
@@ -110,10 +130,25 @@ export default function QuizView() {
         quizId: quiz.id,
         moduleId: quiz.moduleId,
         score: finalScore,
+        correctAnswers: correctCount,
+        minimumPassCount: requiredToPass,
+        passed: didPass,
         dateTaken: new Date().toISOString(),
       });
+      setCorrectAnswers(correctCount);
       setScore(finalScore);
       setIsSubmitted(true);
+      setPassed(didPass);
+      setLastAttempt({
+        id: "latest",
+        userId: userProfile.uid,
+        quizId: quiz.id,
+        score: finalScore,
+        correctAnswers: correctCount,
+        minimumPassCount: requiredToPass,
+        passed: didPass,
+        dateTaken: new Date().toISOString(),
+      });
     } catch (err) {
       console.error(err);
       setErrorMsg("Failed to save results. Please try again.");
@@ -168,6 +203,19 @@ export default function QuizView() {
     );
   }
 
+  const requiredToPass =
+    quiz.minimumPassCount ?? Math.ceil((quiz.questions.length * 2) / 3);
+  const requiredPercentage = Math.round((requiredToPass / quiz.questions.length) * 100);
+
+  const handleRetry = () => {
+    setAnswers({});
+    setIsSubmitted(false);
+    setScore(0);
+    setCorrectAnswers(0);
+    setPassed(false);
+    setErrorMsg("");
+  };
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
@@ -181,10 +229,24 @@ export default function QuizView() {
             </h1>
             <p className="text-gray-600 border-l-2 border-primary-200 pl-3">
               This assessment contains {quiz.questions.length} questions. Please
-              read each carefully before answering.
+              read each carefully before answering. You need{" "}
+              {requiredToPass}/{quiz.questions.length} correct to pass (
+              {requiredPercentage}%).
             </p>
           </div>
         </div>
+
+        {lastAttempt && !lastAttempt.passed && !isSubmitted && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+            <p className="text-sm font-medium">
+              Last attempt was below the pass mark.
+            </p>
+            <p className="mt-1 text-sm">
+              You scored {lastAttempt.score}% and need at least {requiredToPass}/
+              {quiz.questions.length} correct to pass. Review the content and retry.
+            </p>
+          </div>
+        )}
 
         {errorMsg && !isSubmitted && (
           <div className="mb-6 bg-red-50 text-red-700 p-4 rounded-lg flex items-start gap-3 border border-red-100">
@@ -195,31 +257,52 @@ export default function QuizView() {
 
         {isSubmitted ? (
           <div className="text-center py-12">
-            <Award className="w-20 h-20 text-primary-500 mx-auto mb-6" />
+            <Award
+              className={`mx-auto mb-6 h-20 w-20 ${
+                passed ? "text-primary-500" : "text-amber-500"
+              }`}
+            />
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Assessment Complete!
+              {passed ? "Assessment passed" : "Assessment not passed"}
             </h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              You've successfully finished this module's required assessment.
+              {passed
+                ? "You've successfully met the pass mark for this module assessment."
+                : "You did not meet the pass mark yet. Review the lesson content and retry the test."}
             </p>
             <div className="inline-flex flex-col items-center justify-center p-8 bg-gray-50 rounded-2xl border border-gray-100 mb-8 min-w-[200px]">
               <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
                 Final Score
               </span>
               <span
-                className={`text-6xl font-black ${score >= 70 ? "text-green-600" : "text-primary-600"}`}
+                className={`text-6xl font-black ${passed ? "text-green-600" : "text-amber-600"}`}
               >
                 {score}%
               </span>
+              <p className="mt-3 text-sm text-gray-600">
+                {correctAnswers}/{quiz.questions.length} correct
+              </p>
+              <p className="mt-1 text-sm text-gray-600">
+                Pass mark: {requiredToPass}/{quiz.questions.length}
+              </p>
             </div>
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              {moduleId && quizId && (
+              {passed && moduleId && quizId && (
                 <Link
                   to={`/modules/${moduleId}/certificate?quiz=${encodeURIComponent(quizId)}`}
                   className="rounded-lg border-2 border-primary-600 bg-white px-8 py-3 font-medium text-primary-700 hover:bg-primary-50 transition-colors"
                 >
                   View certificate
                 </Link>
+              )}
+              {!passed && (
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="rounded-lg border-2 border-primary-600 bg-white px-8 py-3 font-medium text-primary-700 hover:bg-primary-50 transition-colors"
+                >
+                  Retry assessment
+                </button>
               )}
               <button
                 type="button"

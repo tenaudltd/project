@@ -41,6 +41,7 @@ export interface Quiz {
   moduleId: string;
   title: string;
   totalMarks: number;
+  minimumPassCount?: number;
   questions: Question[];
   createdAt: string;
   isPaused?: boolean;
@@ -52,6 +53,9 @@ export interface QuizResult {
   userId: string;
   quizId: string;
   score: number;
+  correctAnswers?: number;
+  minimumPassCount?: number;
+  passed?: boolean;
   dateTaken: string;
 }
 
