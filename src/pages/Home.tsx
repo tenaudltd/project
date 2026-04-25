@@ -1,151 +1,147 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Users, Award, Shield } from "lucide-react";
+import { ArrowRight, Award, BookOpen, Megaphone, Users } from "lucide-react";
+import BrandLogo from "../components/brand/BrandLogo";
+
+const highlights = [
+  {
+    icon: BookOpen,
+    title: "Structured lessons",
+    copy: "Study modules in a clear order and return where you left off.",
+  },
+  {
+    icon: Award,
+    title: "Quizzes and certificates",
+    copy: "Measure progress and generate proof of completion when eligible.",
+  },
+  {
+    icon: Megaphone,
+    title: "Council announcements",
+    copy: "Read official updates in one place without digging through screens.",
+  },
+  {
+    icon: Users,
+    title: "Role-based access",
+    copy: "Learners, staff, and admins each get the tools they actually need.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-primary-50 relative overflow-hidden">
-          <div
-            className="absolute inset-0 z-0 opacity-10 pointer-events-none"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 2px 2px, #0ea5e9 1px, transparent 0)",
-              backgroundSize: "24px 24px",
-            }}
-          />
-          <div className="container relative z-10 px-4 md:px-6 max-w-6xl mx-auto">
-            <div className="flex flex-col items-center space-y-8 text-center">
-              <div className="space-y-4 max-w-3xl">
-                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-gray-900">
-                  Empowering{" "}
-                  <span className="text-primary-600">Mushindamo</span> Through
-                  Knowledge
-                </h1>
-                <p className="mx-auto max-w-[700px] text-gray-600 md:text-xl lg:text-2xl pt-4">
-                  A digital platform designed to enhance civic awareness,
-                  promote transparency, and encourage community participation in
-                  local governance.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm sm:max-w-none justify-center">
-                <Link
-                  to="/register"
-                  className="rounded-xl px-8 py-4 bg-primary-600 text-white font-semibold shadow-lg shadow-primary-500/30 hover:bg-primary-700 hover:-translate-y-1 transition-all duration-300 text-lg flex items-center justify-center"
-                >
-                  Start Learning Now
-                </Link>
-                <Link
-                  to="/login"
-                  className="rounded-xl px-8 py-4 bg-white text-gray-700 font-semibold border-2 border-gray-200 hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 text-lg flex items-center justify-center"
-                >
-                  Demo login
-                </Link>
-                <Link
-                  to="/about"
-                  className="rounded-xl px-8 py-4 bg-white text-gray-700 font-semibold border-2 border-gray-200 hover:border-primary-200 hover:bg-primary-50 transition-all duration-300 text-lg flex items-center justify-center"
-                >
-                  Learn More
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="w-full py-16 lg:py-24 bg-white">
-          <div className="container px-4 md:px-6 max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-                Platform Features
-              </h2>
-              <p className="mt-4 text-lg text-gray-600">
-                Everything you need to engage with local governance.
-              </p>
-            </div>
-
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              <div className="bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-4">
-                  <BookOpen className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">
-                  Interactive Modules
-                </h3>
-                <p className="text-gray-600">
-                  Access structured learning materials covering budgeting, land
-                  administration, and more.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-4">
-                  <Award className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">
-                  Assessments
-                </h3>
-                <p className="text-gray-600">
-                  Test your knowledge with quizzes and earn recognition for your
-                  civic education progress.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-4">
-                  <Users className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">
-                  Community Feedback
-                </h3>
-                <p className="text-gray-600">
-                  Share your thoughts and participate in local decision-making
-                  processes transparently.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-4">
-                  <Shield className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">
-                  Digital Governance
-                </h3>
-                <p className="text-gray-600">
-                  Stay informed with secure, direct announcements from the
-                  Mushindamo Town Council.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer className="bg-gray-900 py-12 text-gray-400">
-        <div className="container px-4 md:px-6 max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-col items-center md:items-start gap-2">
-            <span className="text-xl font-bold text-white">
-              CivicEd Mushindamo
-            </span>
-            <p className="text-sm">
-              Empowering citizens through accessible governance information.
+    <div className="page-shell">
+      <section className="page-header">
+        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+          <div>
+            <span className="eyebrow">Civic learning platform</span>
+            <BrandLogo className="mt-5" />
+            <h1 className="page-title max-w-3xl">
+              Learn how local government works without fighting the interface.
+            </h1>
+            <p className="page-description">
+              CivicEd Mushindamo gives residents a simple way to study modules,
+              follow announcements, and track progress from one consistent
+              platform.
             </p>
-          </div>
-          <div className="flex flex-col items-center gap-3 text-sm md:items-end">
-            <div className="flex flex-wrap justify-center gap-4 md:justify-end">
-              <Link to="/help" className="text-gray-300 hover:text-white">
-                Help &amp; FAQ
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link to="/register" className="button-primary gap-2">
+                Create account
+                <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link to="/about" className="text-gray-300 hover:text-white">
-                About
+              <Link to="/login" className="button-secondary">
+                Try demo access
               </Link>
             </div>
-            <p>
-              © {new Date().getFullYear()} Mushindamo Town Council. All rights
-              reserved.
-            </p>
+          </div>
+
+          <div className="section-card bg-white/80">
+            <p className="text-sm font-semibold text-ink-900">What you can do</p>
+            <div className="mt-4 space-y-4">
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-sm font-medium text-ink-900">
+                  Start with modules
+                </p>
+                <p className="mt-1 text-sm text-ink-600">
+                  Follow lesson-by-lesson learning content designed for residents.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-sm font-medium text-ink-900">
+                  Keep up with council notices
+                </p>
+                <p className="mt-1 text-sm text-ink-600">
+                  Read updates and announcements in a dedicated section.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-sm font-medium text-ink-900">
+                  Track your progress
+                </p>
+                <p className="mt-1 text-sm text-ink-600">
+                  Pick up where you stopped and review quizzes and certificates.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </footer>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {highlights.map((item) => (
+          <article key={item.title} className="metric-card">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-700">
+              <item.icon className="h-5 w-5" />
+            </div>
+            <h2 className="mt-4 text-xl text-ink-900">{item.title}</h2>
+            <p className="mt-2 text-sm text-ink-600">{item.copy}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div className="section-card">
+          <span className="eyebrow">Simple journey</span>
+          <h2 className="mt-4 text-2xl text-ink-900">How people move through the platform</h2>
+          <div className="mt-5 grid gap-3">
+            <div className="rounded-2xl border border-ink-100 p-4">
+              <p className="text-sm font-semibold text-ink-900">1. Sign in or use a demo</p>
+              <p className="mt-1 text-sm text-ink-600">
+                Choose learner, staff, or admin access depending on what you need.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-ink-100 p-4">
+              <p className="text-sm font-semibold text-ink-900">2. Open modules and complete lessons</p>
+              <p className="mt-1 text-sm text-ink-600">
+                Progress is tracked so you can continue later without starting over.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-ink-100 p-4">
+              <p className="text-sm font-semibold text-ink-900">3. Review results and announcements</p>
+              <p className="mt-1 text-sm text-ink-600">
+                The dashboard pulls your next step and recent notices into one place.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="section-card">
+          <span className="eyebrow">Built for clarity</span>
+          <h2 className="mt-4 text-2xl text-ink-900">
+            The interface now prioritizes reading, navigation, and next actions.
+          </h2>
+          <p className="mt-3 text-sm text-ink-600">
+            Instead of oversized marketing panels and shifting layouts, the app
+            uses one predictable structure across public pages and authenticated
+            pages.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link to="/about" className="button-secondary">
+              About the platform
+            </Link>
+            <Link to="/help" className="button-secondary">
+              Help and FAQ
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

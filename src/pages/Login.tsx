@@ -1,9 +1,32 @@
 import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { AlertCircle, ArrowRight } from "lucide-react";
+import BrandLogo from "../components/brand/BrandLogo";
 import { useAuth } from "../contexts/AuthContext";
-import { BookOpen, AlertCircle } from "lucide-react";
+import { auth } from "../lib/firebase";
+
+const demoRoles: Array<{
+  role: "admin" | "staff" | "learner";
+  label: string;
+  access: string;
+}> = [
+  {
+    role: "admin",
+    label: "Admin demo",
+    access: "User management and platform administration",
+  },
+  {
+    role: "staff",
+    label: "Staff demo",
+    access: "Content publishing and curriculum management",
+  },
+  {
+    role: "learner",
+    label: "Learner demo",
+    access: "Study modules, quizzes, and feedback",
+  },
+];
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,7 +37,6 @@ export default function Login() {
   const location = useLocation();
 
   const from = location.state?.from?.pathname || "/dashboard";
-
   const { demoLogin } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,124 +68,98 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mb-4">
-            <BookOpen className="w-6 h-6" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="text-gray-500 mt-2 text-center text-sm">
-            Sign in to continue your civic education journey. Use the demo
-            buttons below to explore without creating an account.
+    <div className="page-shell">
+      <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+        <div className="section-card">
+          <span className="eyebrow">Sign in</span>
+          <BrandLogo className="mt-5" />
+          <h1 className="page-title max-w-xl">
+            Access the platform with your account or a demo role.
+          </h1>
+          <p className="page-description max-w-xl">
+            Use demos for quick review, or sign in with your own account to
+            continue where you left off.
           </p>
+
+          <div className="mt-6 space-y-3">
+            {demoRoles.map((item) => (
+              <button
+                key={item.role}
+                type="button"
+                onClick={() => handleDemoLogin(item.role)}
+                disabled={loading}
+                className="flex w-full items-center justify-between rounded-2xl border border-ink-100 bg-slate-50 px-4 py-4 text-left hover:border-primary-200 hover:bg-primary-50 disabled:opacity-70"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-ink-900">{item.label}</p>
+                  <p className="mt-1 text-sm text-ink-600">{item.access}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-ink-500" />
+              </button>
+            ))}
+          </div>
         </div>
 
-        {error && (
-          <div className="mb-6 bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 mb-1"
-              htmlFor="email"
-            >
-              Email Address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 mb-1"
-              htmlFor="password"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary-600 text-white rounded-lg px-4 py-2.5 font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="font-semibold text-primary-600 hover:text-primary-800"
-          >
-            Sign up
-          </Link>
-        </div>
-
-        <div className="mt-8 border-t border-gray-100 pt-6">
-          <p className="text-sm text-gray-500 text-center mb-4">
-            Demo Accounts
+        <section className="section-card">
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-ink-500">
+            Account access
           </p>
-          <div className="flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("admin")}
-              disabled={loading}
-              className="w-full bg-red-50 text-red-700 hover:bg-red-100 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border border-red-100 text-left flex items-center justify-between"
-            >
-              <span>
-                Login as <strong className="font-bold">System Admin</strong>
-              </span>
-              <span className="text-xs opacity-75">Full Access</span>
+          <h2 className="mt-3 text-3xl text-ink-900">Welcome back</h2>
+
+          {error && (
+            <div className="mt-6 flex items-start gap-3 rounded-2xl border border-coral-200 bg-coral-50 p-4 text-sm text-coral-800">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-ink-700" htmlFor="email">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                className="field-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium text-ink-700"
+                htmlFor="password"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                className="field-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="button-primary w-full">
+              {loading ? "Signing in..." : "Sign in"}
             </button>
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("staff")}
-              disabled={loading}
-              className="w-full bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border border-amber-100 text-left flex items-center justify-between"
-            >
-              <span>
-                Login as <strong className="font-bold">Council Staff</strong>
-              </span>
-              <span className="text-xs opacity-75">Content Creator</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("learner")}
-              disabled={loading}
-              className="w-full bg-green-50 text-green-700 hover:bg-green-100 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border border-green-100 text-left flex items-center justify-between"
-            >
-              <span>
-                Login as{" "}
-                <strong className="font-bold">Citizen (Learner)</strong>
-              </span>
-              <span className="text-xs opacity-75">Read Only</span>
-            </button>
-          </div>
-        </div>
-      </div>
+          </form>
+
+          <p className="mt-6 text-sm text-ink-600">
+            Don&apos;t have an account?{" "}
+            <Link to="/register" className="font-semibold text-primary-700 hover:text-primary-800">
+              Create one
+            </Link>
+          </p>
+        </section>
+      </section>
     </div>
   );
 }

@@ -15,6 +15,9 @@ export interface Module {
   description: string;
   createdBy: string;
   createdAt: string;
+  lessonCount?: number;
+  quizId?: string;
+  hasQuiz?: boolean;
 }
 
 export interface Lesson {
@@ -40,6 +43,8 @@ export interface Quiz {
   totalMarks: number;
   questions: Question[];
   createdAt: string;
+  isPaused?: boolean;
+  pausedAt?: string;
 }
 
 export interface QuizResult {

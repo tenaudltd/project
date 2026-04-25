@@ -66,8 +66,12 @@ export default function AdminDashboard() {
     try {
       const userRef = doc(db, "Users", userId);
       await updateDoc(userRef, { role: newRole });
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.uid === userId ? { ...user, role: newRole as UserProfile["role"] } : user,
+        ),
+      );
       setSuccess("User role updated successfully.");
-      fetchUsers(); // Refresh list
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
       console.error("Error updating role:", error);

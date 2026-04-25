@@ -1,28 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { BookOpen, ChevronRight, LayoutTemplate, Search, Star } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import type { Module } from "../lib/types";
-import { listUserModuleProgress } from "../lib/moduleProgress";
+import { db } from "../lib/firebase";
+import { resolveModuleLessonCounts } from "../lib/moduleMetadata";
 import {
   getBookmarkedModuleIds,
   toggleBookmarkModule,
 } from "../lib/bookmarksLocal";
-import {
-  BookOpen,
-  ChevronRight,
-  LayoutTemplate,
-  Search,
-  Star,
-} from "lucide-react";
+import type { Module } from "../lib/types";
+import { listUserModuleProgress } from "../lib/moduleProgress";
 
 export default function ModulesList() {
   const { userProfile } = useAuth();
   const [modules, setModules] = useState<Module[]>([]);
-  const [lessonCounts, setLessonCounts] = useState<Record<string, number>>(
-    {},
-  );
+  const [lessonCounts, setLessonCounts] = useState<Record<string, number>>({});
   const [progressMap, setProgressMap] = useState<
     Record<string, { done: number; total: number }>
   >({});
@@ -33,31 +26,14 @@ export default function ModulesList() {
   useEffect(() => {
     const fetchModules = async () => {
       try {
-        const q = query(
-          collection(db, "Modules"),
-          orderBy("createdAt", "desc"),
-        );
+        const q = query(collection(db, "Modules"), orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
         const fetched: Module[] = [];
         querySnapshot.forEach((docSnap) => {
           fetched.push({ id: docSnap.id, ...docSnap.data() } as Module);
         });
         setModules(fetched);
-
-        const counts: Record<string, number> = {};
-        await Promise.all(
-          fetched.map(async (mod) => {
-            try {
-              const ls = await getDocs(
-                collection(db, `Modules/${mod.id}/Lessons`),
-              );
-              counts[mod.id] = ls.size;
-            } catch {
-              counts[mod.id] = 0;
-            }
-          }),
-        );
-        setLessonCounts(counts);
+        setLessonCounts(await resolveModuleLessonCounts(fetched));
       } catch (error) {
         console.error("Error fetching modules:", error);
       } finally {
@@ -73,19 +49,22 @@ export default function ModulesList() {
       try {
         const list = await listUserModuleProgress(userProfile.uid);
         const map: Record<string, { done: number; total: number }> = {};
-        for (const m of modules) {
-          const total = lessonCounts[m.id] ?? 0;
-          const row = list.find((p) => p.moduleId === m.id);
+        for (const module of modules) {
+          const total = module.lessonCount ?? lessonCounts[module.id] ?? 0;
+          const row = list.find((progress) => progress.moduleId === module.id);
           const done = row?.completedLessonIds?.length ?? 0;
-          map[m.id] = { done, total };
+          map[module.id] = { done, total };
         }
         setProgressMap(map);
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
       }
     };
-    if (modules.length && Object.keys(lessonCounts).length) sync();
-  }, [userProfile?.uid, modules, lessonCounts]);
+
+    if (modules.length && Object.keys(lessonCounts).length) {
+      sync();
+    }
+  }, [lessonCounts, modules, userProfile?.uid]);
 
   useEffect(() => {
     if (!userProfile?.uid) return;
@@ -93,12 +72,12 @@ export default function ModulesList() {
   }, [userProfile?.uid]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return modules;
+    const queryValue = search.trim().toLowerCase();
+    if (!queryValue) return modules;
     return modules.filter(
-      (m) =>
-        m.title.toLowerCase().includes(q) ||
-        m.description.toLowerCase().includes(q),
+      (module) =>
+        module.title.toLowerCase().includes(queryValue) ||
+        module.description.toLowerCase().includes(queryValue),
     );
   }, [modules, search]);
 
@@ -110,118 +89,130 @@ export default function ModulesList() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-100 border-t-primary-600" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Learning Modules</h1>
-        <p className="mt-2 text-gray-600">
-          Explore the civic education curriculum designed for Mushindamo
-          residents. Search, bookmark favourites, and track your progress.
-        </p>
-      </div>
+    <div className="page-shell">
+      <section className="page-header">
+        <div className="grid gap-6 lg:grid-cols-[1fr_0.75fr] lg:items-end">
+          <div>
+            <span className="eyebrow">Modules</span>
+            <h1 className="page-title max-w-3xl">
+              Browse the learning library and continue where you stopped.
+            </h1>
+            <p className="page-description">
+              Search by title or description, bookmark useful modules, and track
+              your lesson progress at a glance.
+            </p>
+          </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-        <input
-          type="search"
-          placeholder="Search modules by title or description…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-        />
-      </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="stat-chip">
+              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
+                Modules available
+              </p>
+              <p className="mt-2 text-3xl font-semibold text-ink-900">{modules.length}</p>
+            </div>
+            <div className="stat-chip">
+              <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
+                Bookmarked
+              </p>
+              <p className="mt-2 text-3xl font-semibold text-ink-900">{bookmarkIds.length}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-card">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
+          <input
+            type="search"
+            placeholder="Search modules by title or description"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="field-input pl-12"
+          />
+        </div>
+      </section>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-gray-100 bg-white p-12 text-center flex flex-col items-center shadow-sm">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 mb-4">
-            <LayoutTemplate className="w-8 h-8" />
+        <section className="empty-state">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-ink-400">
+            <LayoutTemplate className="h-8 w-8" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2 className="mt-5 text-xl font-semibold text-ink-900">
             {modules.length === 0
               ? "No modules available"
               : "No modules match your search"}
           </h2>
-          <p className="text-gray-500 max-w-sm">
+          <p className="mt-2 max-w-md text-sm text-ink-600">
             {modules.length === 0
-              ? "The staff council hasn't uploaded any learning modules yet."
-              : "Try a different search term."}
+              ? "Staff have not uploaded any learning modules yet."
+              : "Try a broader keyword or clear the search field."}
           </p>
-        </div>
+        </section>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((module) => {
-            const prog = progressMap[module.id];
-            const total = prog?.total ?? lessonCounts[module.id] ?? 0;
-            const done = prog?.done ?? 0;
+            const progress = progressMap[module.id];
+            const total =
+              progress?.total ?? module.lessonCount ?? lessonCounts[module.id] ?? 0;
+            const done = progress?.done ?? 0;
             const pct =
               total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
             const starred = bookmarkIds.includes(module.id);
+
             return (
-              <div
-                key={module.id}
-                className="group rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden"
-              >
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex items-start justify-between gap-2 mb-4">
-                    <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center text-primary-600 group-hover:bg-primary-100 transition-colors">
-                      <BookOpen className="w-5 h-5" />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleStar(module.id)}
-                      className="rounded-lg p-1.5 text-gray-400 hover:bg-amber-50 hover:text-amber-500"
-                      title={
-                        starred ? "Remove bookmark" : "Bookmark this module"
-                      }
-                      aria-label={
-                        starred ? "Remove bookmark" : "Bookmark this module"
-                      }
-                    >
-                      <Star
-                        className={`h-5 w-5 ${starred ? "fill-amber-400 text-amber-500" : ""}`}
-                      />
-                    </button>
+              <article key={module.id} className="section-card flex flex-col">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-700">
+                    <BookOpen className="h-5 w-5" />
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">
-                    {module.title}
-                  </h2>
-                  <p className="text-sm text-gray-600 flex-1 line-clamp-3 mb-4">
-                    {module.description}
-                  </p>
-                  {total > 0 && (
-                    <div className="mb-4">
-                      <div className="mb-1 flex justify-between text-xs text-gray-500">
-                        <span>Your progress</span>
-                        <span>
-                          {done}/{total} lessons
-                        </span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-100">
-                        <div
-                          className="h-2 rounded-full bg-green-500 transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  <Link
-                    to={`/modules/${module.id}/lessons/start`}
-                    className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700 mt-auto"
+                  <button
+                    type="button"
+                    onClick={() => toggleStar(module.id)}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-ink-100 bg-slate-50 text-ink-500 hover:border-primary-200 hover:text-primary-700"
+                    title={starred ? "Remove bookmark" : "Bookmark this module"}
+                    aria-label={starred ? "Remove bookmark" : "Bookmark this module"}
                   >
-                    {done > 0 ? "Continue module" : "Start module"}
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Link>
+                    <Star className={`h-4 w-4 ${starred ? "fill-sand-400 text-sand-500" : ""}`} />
+                  </button>
                 </div>
-              </div>
+
+                <h2 className="mt-5 text-2xl text-ink-900">{module.title}</h2>
+                <p className="mt-3 flex-1 text-sm text-ink-600">{module.description}</p>
+
+                <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+                  <div className="mb-2 flex justify-between text-xs font-medium uppercase tracking-[0.16em] text-ink-500">
+                    <span>Progress</span>
+                    <span>
+                      {done}/{total || 0}
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-white">
+                    <div
+                      className="h-full rounded-full bg-primary-600"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+
+                <Link
+                  to={`/modules/${module.id}/lessons/start`}
+                  className="button-primary mt-5 justify-between"
+                >
+                  <span>{done > 0 ? "Continue module" : "Start module"}</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </article>
             );
           })}
-        </div>
+        </section>
       )}
     </div>
   );

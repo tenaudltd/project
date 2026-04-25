@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { AlertCircle } from "lucide-react";
+import BrandLogo from "../components/brand/BrandLogo";
 import { auth, db } from "../lib/firebase";
-import { BookOpen, AlertCircle } from "lucide-react";
 import type { UserProfile } from "../lib/types";
 
 export default function Register() {
@@ -19,7 +20,8 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      return setError("Passwords do not match.");
+      setError("Passwords do not match.");
+      return;
     }
 
     try {
@@ -36,7 +38,7 @@ export default function Register() {
         fullName,
         email,
         phoneNumber,
-        role: "learner", // Default role for open registration
+        role: "learner",
         createdAt: new Date().toISOString(),
       };
 
@@ -52,138 +54,136 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mb-4">
-            <BookOpen className="w-6 h-6" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Create an Account
-          </h2>
-          <p className="text-gray-500 mt-2 text-center text-sm">
-            Join the Mushindamo Civic Education platform today.
+    <div className="page-shell">
+      <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+        <div className="section-card">
+          <span className="eyebrow">Create account</span>
+          <BrandLogo className="mt-5" />
+          <h1 className="page-title max-w-xl">
+            Register once and keep your learning progress in one place.
+          </h1>
+          <p className="page-description max-w-xl">
+            New accounts are created as learner profiles by default. You can
+            then access modules, quizzes, certificates, and feedback.
           </p>
+
+          <div className="mt-6 rounded-2xl bg-slate-50 p-5">
+            <p className="text-sm font-semibold text-ink-900">Included with a learner account</p>
+            <ul className="mt-3 space-y-2 text-sm text-ink-600">
+              <li>Module progress tracking</li>
+              <li>Quiz results and certificates</li>
+              <li>Access to council announcements</li>
+              <li>Feedback submission tools</li>
+            </ul>
+          </div>
         </div>
 
-        {error && (
-          <div className="mb-6 bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
+        <section className="section-card">
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-ink-500">
+            New learner profile
+          </p>
+          <h2 className="mt-3 text-3xl text-ink-900">Register</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 mb-1"
-              htmlFor="fullName"
-            >
-              Full Name
-            </label>
-            <input
-              id="fullName"
-              type="text"
-              required
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="John Doe"
-            />
-          </div>
+          {error && (
+            <div className="mt-6 flex items-start gap-3 rounded-2xl border border-coral-200 bg-coral-50 p-4 text-sm text-coral-800">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="mt-8 grid gap-5 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-ink-700" htmlFor="fullName">
+                Full name
+              </label>
+              <input
+                id="fullName"
+                type="text"
+                required
+                className="field-input"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="John Doe"
+              />
+            </div>
+
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1"
-                htmlFor="email"
-              >
-                Email Address
+              <label className="mb-2 block text-sm font-medium text-ink-700" htmlFor="email">
+                Email address
               </label>
               <input
                 id="email"
                 type="email"
                 required
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
+                className="field-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
               />
             </div>
+
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1"
-                htmlFor="phone"
-              >
-                Phone Number (Optional)
+              <label className="mb-2 block text-sm font-medium text-ink-700" htmlFor="phone">
+                Phone number
               </label>
               <input
                 id="phone"
                 type="tel"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
+                className="field-input"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+260 97..."
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1"
-                htmlFor="password"
-              >
+              <label className="mb-2 block text-sm font-medium text-ink-700" htmlFor="password">
                 Password
               </label>
               <input
                 id="password"
                 type="password"
                 required
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
+                className="field-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
               />
             </div>
+
             <div>
               <label
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="mb-2 block text-sm font-medium text-ink-700"
                 htmlFor="confirmPassword"
               >
-                Confirm Password
+                Confirm password
               </label>
               <input
                 id="confirmPassword"
                 type="password"
                 required
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
+                className="field-input"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
               />
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-6 bg-primary-600 text-white rounded-lg px-4 py-2.5 font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {loading ? "Creating Account..." : "Sign Up"}
-          </button>
-        </form>
+            <div className="md:col-span-2">
+              <button type="submit" disabled={loading} className="button-primary w-full">
+                {loading ? "Creating account..." : "Create account"}
+              </button>
+            </div>
+          </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-primary-600 hover:text-primary-800"
-          >
-            Log in
-          </Link>
-        </div>
-      </div>
+          <p className="mt-6 text-sm text-ink-600">
+            Already registered?{" "}
+            <Link to="/login" className="font-semibold text-primary-700 hover:text-primary-800">
+              Sign in
+            </Link>
+          </p>
+        </section>
+      </section>
     </div>
   );
 }

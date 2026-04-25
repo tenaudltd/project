@@ -1,4 +1,5 @@
 import {
+  arrayUnion,
   collection,
   doc,
   getDoc,
@@ -33,19 +34,11 @@ export async function recordLessonReached(
   moduleId: string,
   lessonId: string,
 ): Promise<void> {
-  const ref = progressDocRef(userId, moduleId);
-  const prev = await getDoc(ref);
-  const existing: string[] = prev.exists()
-    ? Array.isArray(prev.data().completedLessonIds)
-      ? prev.data().completedLessonIds
-      : []
-    : [];
-  const next = existing.includes(lessonId) ? existing : [...existing, lessonId];
   await setDoc(
-    ref,
+    progressDocRef(userId, moduleId),
     {
       moduleId,
-      completedLessonIds: next,
+      completedLessonIds: arrayUnion(lessonId),
       updatedAt: new Date().toISOString(),
     },
     { merge: true },

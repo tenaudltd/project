@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { addDoc, collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -37,18 +37,14 @@ export default function StaffDashboard() {
 
   const fetchModules = useCallback(async () => {
     try {
-      const q = collection(db, "Modules");
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(
+        query(collection(db, "Modules"), orderBy("createdAt", "desc")),
+      );
       const fetched: Module[] = [];
       querySnapshot.forEach((docSnap) => {
         fetched.push({ id: docSnap.id, ...docSnap.data() } as Module);
       });
-      setModules(
-        fetched.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        ),
-      );
+      setModules(fetched);
     } catch (err) {
       console.error("Failed to fetch modules", err);
     }
@@ -89,26 +85,43 @@ export default function StaffDashboard() {
     e.preventDefault();
     if (!modTitle.trim() || !modDescription.trim() || !userProfile) return;
 
+    const title = modTitle.trim();
+    const description = modDescription.trim();
+    const createdAt = new Date().toISOString();
+
     setLoading(true);
     setErrorMsg("");
     try {
       const docRef = await addDoc(collection(db, "Modules"), {
-        title: modTitle.trim(),
-        description: modDescription.trim(),
+        title,
+        description,
         createdBy: userProfile.uid,
-        createdAt: new Date().toISOString(),
+        createdAt,
+        lessonCount: 0,
+        hasQuiz: false,
       });
-      setSuccessMsg("Module created successfully! Redirecting to manager...");
+      setModules((prev) => [
+        {
+          id: docRef.id,
+          title,
+          description,
+          createdBy: userProfile.uid,
+          createdAt,
+          lessonCount: 0,
+          hasQuiz: false,
+        },
+        ...prev,
+      ]);
+      setSuccessMsg("Module created successfully. Opening manager...");
       setModTitle("");
       setModDescription("");
-      setTimeout(() => {
-        navigate(`/staff/modules/${docRef.id}`);
-      }, 1500);
+      navigate(`/staff/modules/${docRef.id}`);
     } catch (err: unknown) {
       setErrorMsg("Failed to create module.");
       console.error(err);
-      setLoading(false);
       setTimeout(() => setSuccessMsg(""), 5000);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -1,113 +1,78 @@
-import { Flag, History } from "lucide-react";
+import { Flag, History, Landmark, Layers3 } from "lucide-react";
+
+const pillars = [
+  {
+    icon: Flag,
+    title: "Mission",
+    copy:
+      "Help residents understand local government, public services, rights, and participation.",
+  },
+  {
+    icon: History,
+    title: "Why it exists",
+    copy:
+      "Traditional sensitization reaches limited audiences. This platform extends that work online.",
+  },
+  {
+    icon: Landmark,
+    title: "Public value",
+    copy:
+      "Council information becomes easier to publish, read, and revisit over time.",
+  },
+  {
+    icon: Layers3,
+    title: "Platform approach",
+    copy:
+      "Learning, announcements, staff tools, and user management all use one product structure.",
+  },
+];
 
 export default function About() {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <main className="flex-1">
-        <section className="w-full py-12 md:py-24 bg-white border-b border-gray-200">
-          <div className="container px-4 md:px-6 max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl mb-6 text-gray-900">
-              About Civic Education at{" "}
-              <span className="text-primary-600">Mushindamo</span>
-            </h1>
-            <p className="text-lg text-gray-600 leading-relaxed mx-auto">
-              Mushindamo Town Council is committed to bridging the governance
-              gap between the local authority and its citizens. Our Web-Based
-              Civic Education Learning Platform is a critical step towards
-              transparent, inclusive, and decentralized governance.
-            </p>
-          </div>
-        </section>
+    <div className="page-shell max-w-6xl">
+      <section className="page-header">
+        <span className="eyebrow">About CivicEd</span>
+        <h1 className="page-title max-w-4xl">
+          A simpler civic education platform for Mushindamo Town Council.
+        </h1>
+        <p className="page-description">
+          The platform is designed to make civic learning easier to access,
+          easier to manage, and easier to trust.
+        </p>
+      </section>
 
-        <section className="w-full py-16">
-          <div className="container px-4 md:px-6 max-w-5xl mx-auto grid gap-8 md:grid-cols-2">
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
-              <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center">
-                <Flag className="w-6 h-6" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Our Mission</h2>
-              <p className="text-gray-600 leading-relaxed">
-                To equip the citizens of Mushindamo with the knowledge and tools
-                necessary to actively participate in local governance,
-                understand their rights and responsibilities, and contribute to
-                sustainable community development.
-              </p>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {pillars.map((pillar) => (
+          <article key={pillar.title} className="metric-card">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-700">
+              <pillar.icon className="h-5 w-5" />
             </div>
+            <h2 className="mt-4 text-xl text-ink-900">{pillar.title}</h2>
+            <p className="mt-2 text-sm text-ink-600">{pillar.copy}</p>
+          </article>
+        ))}
+      </section>
 
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
-              <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center">
-                <History className="w-6 h-6" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                The Background
-              </h2>
-              <p className="text-gray-600 leading-relaxed">
-                Historically, civic education relied on traditional face-to-face
-                sensitization meetings which were limited by geography and
-                resources. This platform modernizes our approach, ensuring that
-                structured, digital, and interactive learning is accessible to
-                everyone in the district.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="w-full py-16 bg-white">
-          <div className="container px-4 md:px-6 max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold tracking-tight text-center mb-12 text-gray-900">
-              Why Use This Platform?
-            </h2>
-
-            <div className="space-y-8">
-              <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="font-bold">1</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                    Demystify Local Governance
-                  </h3>
-                  <p className="text-gray-600">
-                    Understand how the Town Council operates, from the
-                    Constituency Development Fund (CDF) allocation to local
-                    budget planning and service delivery standards.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="font-bold">2</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                    Interactive Curriculum
-                  </h3>
-                  <p className="text-gray-600">
-                    Engage with multimedia modules created by council experts.
-                    Learn at your own pace from your mobile device or computer.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="font-bold">3</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                    Verify Your Knowledge
-                  </h3>
-                  <p className="text-gray-600">
-                    Take automated assessments to track your understanding of
-                    civic duties and transparent administration.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+      <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="section-card">
+          <span className="eyebrow">What changed</span>
+          <h2 className="mt-4 text-2xl text-ink-900">
+            The product now follows one navigation model and one reading rhythm.
+          </h2>
+          <p className="mt-3 text-sm text-ink-600">
+            Users no longer move between unrelated layouts. Public pages,
+            learner pages, and content pages now share the same spacing,
+            cards, buttons, and form patterns.
+          </p>
+        </div>
+        <div className="section-card">
+          <span className="eyebrow">Expected outcome</span>
+          <p className="mt-4 text-lg text-ink-700">
+            Residents should be able to understand what the platform offers,
+            where to go next, and how to continue learning within a few seconds.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

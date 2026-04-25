@@ -148,6 +148,26 @@ export default function QuizView() {
     );
   }
 
+  if (quiz.isPaused) {
+    return (
+      <div className="max-w-3xl mx-auto p-8 text-center bg-white rounded-xl shadow-sm border border-gray-100">
+        <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          Quiz paused
+        </h2>
+        <p className="text-gray-500 mb-6">
+          This assessment is temporarily unavailable.
+        </p>
+        <button
+          onClick={() => navigate(`/modules`)}
+          className="text-primary-600 font-medium hover:text-primary-700"
+        >
+          &larr; Return to Modules
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">

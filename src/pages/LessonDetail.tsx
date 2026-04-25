@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { useParams, Link, Navigate } from "react-router-dom";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import type { Lesson } from "../lib/types";
 import { recordLessonReached, getModuleProgress } from "../lib/moduleProgress";
 import { ChevronLeft, ChevronRight, FileText, CheckCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function LessonDetail() {
-  const { id: moduleId } = useParams<{ id: string }>();
+  const { id: moduleId, lessonId } = useParams<{
+    id: string;
+    lessonId: string;
+  }>();
   const { userProfile } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
+  const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [quizId, setQuizId] = useState<string | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
@@ -31,6 +36,15 @@ export default function LessonDetail() {
           fetched.push({ id: docSnap.id, ...docSnap.data() } as Lesson);
         });
         setLessons(fetched);
+        if (fetched.length > 0) {
+          const resolvedLesson =
+            lessonId && lessonId !== "start"
+              ? fetched.find((lesson) => lesson.id === lessonId)
+              : fetched[0];
+          setCurrentLessonId(resolvedLesson?.id ?? fetched[0].id);
+        } else {
+          setCurrentLessonId(null);
+        }
       } catch (error) {
         console.error("Error fetching lessons:", error);
       } finally {
@@ -43,10 +57,13 @@ export default function LessonDetail() {
         const qz = query(
           collection(db, `Modules/${moduleId}/Quizzes`),
           orderBy("createdAt", "desc"),
+          limit(1),
         );
         const snapshot = await getDocs(qz);
         if (!snapshot.empty) {
-          setQuizId(snapshot.docs[0].id);
+          const quizDoc = snapshot.docs[0];
+          const quizData = quizDoc.data() as { isPaused?: boolean };
+          setQuizId(quizData.isPaused ? null : quizDoc.id);
         }
       } catch (error) {
         console.error("Error fetching quiz", error);
@@ -55,7 +72,7 @@ export default function LessonDetail() {
 
     fetchLessons();
     fetchQuiz();
-  }, [moduleId]);
+  }, [moduleId, lessonId]);
 
   useEffect(() => {
     const loadProgress = async () => {
@@ -89,17 +106,22 @@ export default function LessonDetail() {
   );
 
   const goNext = async () => {
-    const current = lessons[currentLessonIndex];
+    const currentIndex = lessons.findIndex((lesson) => lesson.id === currentLessonId);
+    const current = currentIndex >= 0 ? lessons[currentIndex] : undefined;
     if (current) await persistLesson(current.id);
-    setCurrentLessonIndex((prev) => Math.min(prev + 1, lessons.length - 1));
+    const nextIndex =
+      currentIndex >= 0 ? Math.min(currentIndex + 1, lessons.length - 1) : 0;
+    setCurrentLessonId(lessons[nextIndex]?.id ?? null);
   };
 
   const goPrev = () => {
-    setCurrentLessonIndex((prev) => Math.max(prev - 1, 0));
+    const currentIndex = lessons.findIndex((lesson) => lesson.id === currentLessonId);
+    const previousIndex = currentIndex >= 0 ? Math.max(currentIndex - 1, 0) : 0;
+    setCurrentLessonId(lessons[previousIndex]?.id ?? null);
   };
 
   const goToQuiz = async () => {
-    const current = lessons[currentLessonIndex];
+    const current = lessons.find((lesson) => lesson.id === currentLessonId);
     if (current) await persistLesson(current.id);
   };
 
@@ -131,7 +153,20 @@ export default function LessonDetail() {
     );
   }
 
-  const currentLesson = lessons[currentLessonIndex];
+  const currentLessonIndex = lessons.findIndex(
+    (lesson) => lesson.id === currentLessonId,
+  );
+  const currentLesson =
+    currentLessonIndex >= 0 ? lessons[currentLessonIndex] : null;
+
+  if (!currentLesson && lessons.length > 0) {
+    return <Navigate to={`/modules/${moduleId}/lessons/${lessons[0].id}`} replace />;
+  }
+
+  if (!currentLesson) {
+    return null;
+  }
+
   const isFirst = currentLessonIndex === 0;
   const isLast = currentLessonIndex === lessons.length - 1;
   const recordedCount = completedIds.size;
@@ -149,7 +184,7 @@ export default function LessonDetail() {
         </Link>
         <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 font-medium mb-2">
           <span>
-            Lesson {currentLessonIndex + 1} of {lessons.length}
+            Lesson {Math.max(currentLessonIndex, 0) + 1} of {lessons.length}
           </span>
           <span className="text-gray-300">|</span>
           <span>
@@ -180,17 +215,17 @@ export default function LessonDetail() {
           to your account).
         </p>
         <h1 className="text-3xl font-bold text-gray-900">
-          {currentLesson?.title}
+          {currentLesson.title}
         </h1>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex-1 prose prose-lg prose-primary max-w-none">
-        {currentLesson?.content ? (
-          <div
-            dangerouslySetInnerHTML={{
-              __html: currentLesson.content.replace(/\n/g, "<br/>"),
-            }}
-          />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex-1">
+        {typeof currentLesson.content === "string" && currentLesson.content ? (
+          <article className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900 prose-a:text-primary-700">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {currentLesson.content}
+            </ReactMarkdown>
+          </article>
         ) : (
           <p className="text-gray-500 italic">
             No content available for this lesson.

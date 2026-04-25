@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useAuth } from "../../contexts/AuthContext";
 import { mainNavItems } from "../../lib/navigation";
+import BrandLogo from "../brand/BrandLogo";
 
 export default function MobileNavDrawer({
   open,
@@ -38,14 +39,17 @@ export default function MobileNavDrawer({
     <div className="fixed inset-0 z-40 lg:hidden">
       <button
         type="button"
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-ink-900/25 backdrop-blur-sm"
         onClick={onClose}
         aria-label="Close menu"
       />
       <nav
-        className="absolute left-0 top-0 bottom-0 flex w-72 max-w-[85vw] flex-col gap-1 overflow-y-auto border-r border-gray-200 bg-white p-4 pt-20 shadow-xl"
+        className="app-panel absolute bottom-4 left-4 top-4 flex w-80 max-w-[88vw] flex-col gap-1 overflow-y-auto p-4 pt-6"
         aria-label="Main navigation"
       >
+        <div className="border-b border-ink-100 pb-4">
+          <BrandLogo />
+        </div>
         {allowedLinks.map((link) => (
           <NavLink
             key={link.to}
@@ -54,14 +58,15 @@ export default function MobileNavDrawer({
             className={({ isActive }) =>
               twMerge(
                 clsx(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900",
-                  isActive &&
-                    "bg-primary-50 text-primary-700 hover:bg-primary-50",
+                  "mt-2 flex items-center gap-3 rounded-[18px] px-4 py-3 text-sm font-medium text-ink-600 hover:bg-slate-50 hover:text-ink-900",
+                  isActive && "bg-primary-50 text-primary-800",
                 ),
               )
             }
           >
-            <link.icon className="h-5 w-5 flex-shrink-0" />
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50">
+              <link.icon className="h-5 w-5 flex-shrink-0" />
+            </span>
             {link.label}
           </NavLink>
         ))}
