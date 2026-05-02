@@ -31,6 +31,8 @@ function PageLoader() {
 }
 
 function App() {
+  return <PageLoader />;
+  
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
@@ -59,7 +61,9 @@ function App() {
 
         {/* Protected Routes - Learners Only */}
         <Route
-          element={<MainLayout requiresAuth={true} allowedRoles={["learner"]} />}
+          element={
+            <MainLayout requiresAuth={true} allowedRoles={["learner"]} />
+          }
         >
           <Route path="/feedback" element={<Feedback />} />
         </Route>
