@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export default function Settings() {
-  const { userProfile, isDemoSession } = useAuth();
+  const { userProfile } = useAuth();
   const [fullName, setFullName] = useState(userProfile?.fullName || "");
   const [phoneNumber, setPhoneNumber] = useState(
     userProfile?.phoneNumber || "",
@@ -28,12 +28,6 @@ export default function Settings() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userProfile) return;
-    if (isDemoSession) {
-      setError("");
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-      return;
-    }
 
     try {
       setLoading(true);
@@ -74,21 +68,10 @@ export default function Settings() {
           </h2>
         </div>
 
-        {isDemoSession && (
-          <div className="mb-6 rounded-lg border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900">
-            Demo mode: profile changes stay on this page only and are not saved
-            to the server.
-          </div>
-        )}
-
         {success && (
           <div className="mb-6 bg-green-50 text-green-700 p-4 rounded-lg flex items-start gap-3 border border-green-100">
             <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-medium">
-              {isDemoSession
-                ? "Demo mode — nothing was saved."
-                : "Profile updated successfully!"}
-            </p>
+            <p className="text-sm font-medium">Profile updated successfully!</p>
           </div>
         )}
 

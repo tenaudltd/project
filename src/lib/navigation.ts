@@ -9,7 +9,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import type { Role } from "./types";
+import type { Role, UserProfile } from "./types";
 
 export type MainNavItem = {
   to: string;
@@ -68,3 +68,20 @@ export const mainNavItems: MainNavItem[] = [
     roles: ["learner", "staff", "admin"],
   },
 ];
+
+export function navItemsVisibleForAuthUser(
+  userProfile: UserProfile | null,
+): MainNavItem[] {
+  if (!userProfile) {
+    return mainNavItems.filter(
+      (link) =>
+        link.roles.length === 3 &&
+        link.roles.includes("learner") &&
+        link.roles.includes("staff") &&
+        link.roles.includes("admin"),
+    );
+  }
+  return mainNavItems.filter((link) =>
+    link.roles.includes(userProfile.role),
+  );
+}

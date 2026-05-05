@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useAuth } from "../../contexts/AuthContext";
-import { mainNavItems } from "../../lib/navigation";
+import { navItemsVisibleForAuthUser } from "../../lib/navigation";
 import BrandLogo from "../brand/BrandLogo";
 
 export default function MobileNavDrawer({
@@ -31,9 +31,7 @@ export default function MobileNavDrawer({
 
   if (!open) return null;
 
-  const allowedLinks = mainNavItems.filter(
-    (link) => !userProfile || link.roles.includes(userProfile.role),
-  );
+  const allowedLinks = navItemsVisibleForAuthUser(userProfile);
 
   return (
     <div className="fixed inset-0 z-40 lg:hidden">

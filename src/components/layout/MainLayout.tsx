@@ -36,13 +36,13 @@ export default function MainLayout({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (
-    requiresAuth &&
-    allowedRoles.length > 0 &&
-    userProfile &&
-    !allowedRoles.includes(userProfile.role)
-  ) {
-    return <Navigate to="/dashboard" replace />;
+  if (requiresAuth && allowedRoles.length > 0 && currentUser) {
+    if (!userProfile) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    if (!allowedRoles.includes(userProfile.role)) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return (

@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { mainNavItems } from "../../lib/navigation";
+import { navItemsVisibleForAuthUser } from "../../lib/navigation";
 import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
 import BrandLogo from "../brand/BrandLogo";
@@ -8,9 +8,7 @@ import BrandLogo from "../brand/BrandLogo";
 export default function Sidebar() {
   const { userProfile } = useAuth();
 
-  const allowedLinks = mainNavItems.filter(
-    (link) => !userProfile || link.roles.includes(userProfile.role),
-  );
+  const allowedLinks = navItemsVisibleForAuthUser(userProfile);
 
   return (
     <aside className="sticky top-0 hidden h-screen w-[280px] shrink-0 p-5 lg:flex">

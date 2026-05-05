@@ -10,7 +10,7 @@ export default function Navbar({
   showSidebarToggle: boolean;
   onMobileMenuOpen?: () => void;
 }) {
-  const { currentUser, userProfile, signOut, isDemoSession } = useAuth();
+  const { currentUser, userProfile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -72,11 +72,6 @@ export default function Navbar({
           ) : (
             <div className="flex items-center gap-3 text-sm">
               <span className="hidden items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-ink-700 xl:flex">
-                {isDemoSession && (
-                  <span className="rounded-full bg-sand-200 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-ink-900">
-                    Demo
-                  </span>
-                )}
                 <span className="font-medium">{userProfile?.fullName || "User"}</span>
               </span>
               <div className="relative group">

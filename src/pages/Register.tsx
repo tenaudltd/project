@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { AlertCircle } from "lucide-react";
 import BrandLogo from "../components/brand/BrandLogo";
+import { firebaseAuthMessage } from "../lib/firebaseAuthErrors";
 import { auth, db } from "../lib/firebase";
 import type { UserProfile } from "../lib/types";
 
@@ -45,9 +46,9 @@ export default function Register() {
       await setDoc(doc(db, "Users", user.uid), userProfile);
       navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to create an account.";
-      setError(message);
+      setError(
+        firebaseAuthMessage(err, "Couldn’t create your account. Please try again."),
+      );
     } finally {
       setLoading(false);
     }

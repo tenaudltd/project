@@ -47,7 +47,7 @@ export default function Home() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link to="/login" className="button-secondary">
-                Try demo access
+                Sign in
               </Link>
             </div>
           </div>
@@ -102,9 +102,10 @@ export default function Home() {
           <h2 className="mt-4 text-2xl text-ink-900">How people move through the platform</h2>
           <div className="mt-5 grid gap-3">
             <div className="rounded-2xl border border-ink-100 p-4">
-              <p className="text-sm font-semibold text-ink-900">1. Sign in or use a demo</p>
+              <p className="text-sm font-semibold text-ink-900">1. Sign in</p>
               <p className="mt-1 text-sm text-ink-600">
-                Choose learner, staff, or admin access depending on what you need.
+                Your account role (learner, staff, or admin) controls which areas
+                you can open.
               </p>
             </div>
             <div className="rounded-2xl border border-ink-100 p-4">

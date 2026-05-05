@@ -27,8 +27,8 @@ const faqItems = [
     a: "Learners can use the Feedback page in the signed-in navigation to submit messages to council staff.",
   },
   {
-    q: "Can I review the app without creating an account?",
-    a: "Yes. Use the demo roles on the login page to move through learner, staff, and admin experiences quickly.",
+    q: "Do I need an account?",
+    a: "Yes. Register as a learner to study modules, or sign in with credentials your council has given you for staff or admin access.",
   },
 ];
 
@@ -65,8 +65,8 @@ export default function Help() {
         <span className="eyebrow">Help and guidance</span>
         <h1 className="page-title">Answers to the questions people ask first.</h1>
         <p className="page-description">
-          Use this page to understand roles, learning flow, and the quickest way
-          to review the platform.
+          Use this page to understand roles, learning flow, and how to get
+          started.
         </p>
       </section>
 
@@ -86,10 +86,10 @@ export default function Help() {
         <div className="grid gap-4">
           <article className="metric-card">
             <LifeBuoy className="h-8 w-8 text-primary-700" />
-            <h3 className="mt-4 text-xl text-ink-900">Demo access</h3>
+            <h3 className="mt-4 text-xl text-ink-900">Getting started</h3>
             <p className="mt-2 text-sm text-ink-600">
-              The login page includes ready-made demo roles so reviewers can move
-              through the product immediately.
+              Create an account or sign in with your email and password from the
+              login page.
             </p>
           </article>
           <article className="metric-card">
@@ -114,8 +114,7 @@ export default function Help() {
       <section className="section-card text-center">
         <Mail className="mx-auto h-6 w-6 text-primary-700" />
         <p className="mx-auto mt-4 max-w-2xl text-sm text-ink-600">
-          For fast product review, start with demo access instead of creating
-          multiple test accounts.
+          Already registered? Sign in to pick up where you left off.
         </p>
         <Link to="/login" className="button-primary mt-6">
           Go to login
