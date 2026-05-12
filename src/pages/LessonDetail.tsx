@@ -5,7 +5,15 @@ import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
 import type { Lesson } from "../lib/types";
 import { recordLessonReached, getModuleProgress } from "../lib/moduleProgress";
-import { ChevronLeft, ChevronRight, FileText, CheckCircle } from "lucide-react";
+import {
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  FileText,
+  Volume2,
+  Video,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -220,6 +228,52 @@ export default function LessonDetail() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex-1">
+        {currentLesson.mediaUrl && (
+          <section className="mb-8 rounded-xl border border-gray-100 bg-gray-50 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                {currentLesson.mediaType === "audio" ? (
+                  <Volume2 className="h-4 w-4 text-primary-600" />
+                ) : (
+                  <Video className="h-4 w-4 text-primary-600" />
+                )}
+                {currentLesson.mediaName || "Lesson media"}
+              </div>
+              <a
+                href={currentLesson.mediaUrl}
+                download={currentLesson.mediaName}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download
+              </a>
+            </div>
+            {currentLesson.mediaType === "audio" ? (
+              <audio controls className="w-full" src={currentLesson.mediaUrl}>
+                Your browser does not support the audio element.
+              </audio>
+            ) : currentLesson.mediaType === "video" ? (
+              <video
+                controls
+                className="aspect-video w-full rounded-lg bg-black"
+                src={currentLesson.mediaUrl}
+              >
+                Your browser does not support the video element.
+              </video>
+            ) : (
+              <a
+                href={currentLesson.mediaUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm font-medium text-primary-700 hover:text-primary-800"
+              >
+                Open attached file
+              </a>
+            )}
+          </section>
+        )}
         {typeof currentLesson.content === "string" && currentLesson.content ? (
           <article className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900 prose-a:text-primary-700">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>

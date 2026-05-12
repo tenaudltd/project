@@ -41,7 +41,7 @@ export const mainNavItems: MainNavItem[] = [
     to: "/feedback",
     label: "Feedback",
     icon: MessageSquare,
-    roles: ["learner"],
+    roles: ["learner", "staff", "admin"],
   },
   {
     to: "/staff",

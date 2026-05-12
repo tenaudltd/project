@@ -54,16 +54,8 @@ function App() {
           <Route path="/modules/:id/quizzes/:quizId" element={<QuizView />} />
           <Route path="/modules/:id/certificate" element={<Certificate />} />
           <Route path="/announcements" element={<Announcements />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
-
-        {/* Protected Routes - Learners Only */}
-        <Route
-          element={
-            <MainLayout requiresAuth={true} allowedRoles={["learner"]} />
-          }
-        >
           <Route path="/feedback" element={<Feedback />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Protected Routes - Staff Only */}

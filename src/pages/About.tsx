@@ -1,4 +1,9 @@
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
 import { Flag, History, Landmark, Layers3 } from "lucide-react";
+import { db } from "../lib/firebase";
+import { defaultSiteContent, mergeSiteContent } from "../lib/siteContent";
+import type { SiteContent } from "../lib/types";
 
 const pillars = [
   {
@@ -28,17 +33,31 @@ const pillars = [
 ];
 
 export default function About() {
+  const [siteContent, setSiteContent] =
+    useState<SiteContent>(defaultSiteContent);
+
+  useEffect(() => {
+    const fetchSiteContent = async () => {
+      try {
+        const snapshot = await getDoc(doc(db, "SiteContent", "public"));
+        if (snapshot.exists()) {
+          setSiteContent(mergeSiteContent(snapshot.data()));
+        }
+      } catch (error) {
+        console.error("Error fetching site content:", error);
+      }
+    };
+    void fetchSiteContent();
+  }, []);
+
   return (
     <div className="page-shell max-w-6xl">
       <section className="page-header">
-        <span className="eyebrow">About CivicEd</span>
+        <span className="eyebrow">{siteContent.aboutEyebrow}</span>
         <h1 className="page-title max-w-4xl">
-          A simpler civic education platform for Mushindamo Town Council.
+          {siteContent.aboutTitle}
         </h1>
-        <p className="page-description">
-          The platform is designed to make civic learning easier to access,
-          easier to manage, and easier to trust.
-        </p>
+        <p className="page-description">{siteContent.aboutDescription}</p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -57,20 +76,13 @@ export default function About() {
         <div className="section-card">
           <span className="eyebrow">What changed</span>
           <h2 className="mt-4 text-2xl text-ink-900">
-            The product now follows one navigation model and one reading rhythm.
+            {siteContent.aboutFocusTitle}
           </h2>
-          <p className="mt-3 text-sm text-ink-600">
-            Users no longer move between unrelated layouts. Public pages,
-            learner pages, and content pages now share the same spacing,
-            cards, buttons, and form patterns.
-          </p>
+          <p className="mt-3 text-sm text-ink-600">{siteContent.aboutFocusBody}</p>
         </div>
         <div className="section-card">
           <span className="eyebrow">Expected outcome</span>
-          <p className="mt-4 text-lg text-ink-700">
-            Residents should be able to understand what the platform offers,
-            where to go next, and how to continue learning within a few seconds.
-          </p>
+          <p className="mt-4 text-lg text-ink-700">{siteContent.aboutOutcome}</p>
         </div>
       </section>
     </div>

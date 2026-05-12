@@ -1,5 +1,16 @@
 # React + TypeScript + Vite
 
+## Supabase lesson media uploads
+
+Lesson video and audio uploads use Supabase Storage. Add these variables to your
+local `.env` file and create a public storage bucket matching the bucket name:
+
+```bash
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_LESSON_MEDIA_BUCKET=lesson-media
+```
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

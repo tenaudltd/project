@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteField,
   deleteDoc,
   doc,
   getDoc,
@@ -40,6 +41,12 @@ import {
   generateLessonDraftFromText,
   generateQuizDraftFromText,
 } from "../lib/openai";
+import {
+  deleteLessonMedia,
+  isSupabaseConfigured,
+  lessonMediaTypeFromFile,
+  uploadLessonMedia,
+} from "../lib/supabase";
 import type { Lesson, Module, Quiz } from "../lib/types";
 
 export default function StaffModuleManager() {
@@ -63,6 +70,18 @@ export default function StaffModuleManager() {
   const [lesContent, setLesContent] = useState("");
   const [lessonImporting, setLessonImporting] = useState(false);
   const [lessonImportName, setLessonImportName] = useState("");
+  const [lessonMediaFile, setLessonMediaFile] = useState<File | null>(null);
+  const [lessonMediaName, setLessonMediaName] = useState("");
+  const [lessonMediaInputKey, setLessonMediaInputKey] = useState(0);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [editLessonTitle, setEditLessonTitle] = useState("");
+  const [editLessonContent, setEditLessonContent] = useState("");
+  const [editLessonMediaFile, setEditLessonMediaFile] = useState<File | null>(
+    null,
+  );
+  const [editLessonMediaName, setEditLessonMediaName] = useState("");
+  const [editLessonRemoveMedia, setEditLessonRemoveMedia] = useState(false);
+  const [editLessonMediaInputKey, setEditLessonMediaInputKey] = useState(0);
 
   // Quiz form state
   const [quizTitle, setQuizTitle] = useState("");
@@ -154,16 +173,24 @@ export default function StaffModuleManager() {
 
   const handleCreateLesson = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!moduleId || !lesTitle.trim() || !lesContent.trim()) return;
+    if (!moduleId || !lesTitle.trim()) return;
+    if (!lesContent.trim() && !lessonMediaFile) {
+      setErrorMsg("Add lesson text, upload media, or both before saving.");
+      return;
+    }
 
     setLoading(true);
     setErrorMsg("");
     try {
       const createdAt = new Date().toISOString();
+      const mediaFields = lessonMediaFile
+        ? await uploadLessonMedia(moduleId, lessonMediaFile)
+        : {};
       const lessonRef = await addDoc(collection(db, `Modules/${moduleId}/Lessons`), {
         moduleId,
         title: lesTitle.trim(),
         content: lesContent.trim(),
+        ...mediaFields,
         createdAt,
       });
       await updateDoc(doc(db, "Modules", moduleId), {
@@ -177,6 +204,7 @@ export default function StaffModuleManager() {
           moduleId,
           title: lesTitle.trim(),
           content: lesContent.trim(),
+          ...mediaFields,
           createdAt,
         },
       ]);
@@ -190,8 +218,166 @@ export default function StaffModuleManager() {
       );
       setLesTitle("");
       setLesContent("");
+      setLessonMediaFile(null);
+      setLessonMediaName("");
+      setLessonMediaInputKey((prev) => prev + 1);
     } catch (err: unknown) {
-      setErrorMsg("Failed to add lesson.");
+      const message = err instanceof Error ? err.message : "Failed to add lesson.";
+      setErrorMsg(message);
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setSuccessMsg(""), 3000);
+    }
+  };
+
+  const handleLessonMediaChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setLessonMediaFile(null);
+      setLessonMediaName("");
+      return;
+    }
+
+    if (!file.type.startsWith("video/") && !file.type.startsWith("audio/")) {
+      setErrorMsg("Upload a video or audio file for lesson media.");
+      e.target.value = "";
+      return;
+    }
+
+    setErrorMsg("");
+    setLessonMediaFile(file);
+    setLessonMediaName(`${file.name} (${lessonMediaTypeFromFile(file)})`);
+  };
+
+  const resetLessonEdit = () => {
+    setEditingLessonId(null);
+    setEditLessonTitle("");
+    setEditLessonContent("");
+    setEditLessonMediaFile(null);
+    setEditLessonMediaName("");
+    setEditLessonRemoveMedia(false);
+    setEditLessonMediaInputKey((prev) => prev + 1);
+  };
+
+  const startLessonEdit = (lesson: Lesson) => {
+    setErrorMsg("");
+    setEditingLessonId(lesson.id);
+    setEditLessonTitle(lesson.title);
+    setEditLessonContent(lesson.content || "");
+    setEditLessonMediaFile(null);
+    setEditLessonMediaName("");
+    setEditLessonRemoveMedia(false);
+    setEditLessonMediaInputKey((prev) => prev + 1);
+  };
+
+  const handleEditLessonMediaChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setEditLessonMediaFile(null);
+      setEditLessonMediaName("");
+      return;
+    }
+
+    if (!file.type.startsWith("video/") && !file.type.startsWith("audio/")) {
+      setErrorMsg("Upload a video or audio file for lesson media.");
+      e.target.value = "";
+      return;
+    }
+
+    setErrorMsg("");
+    setEditLessonRemoveMedia(false);
+    setEditLessonMediaFile(file);
+    setEditLessonMediaName(`${file.name} (${lessonMediaTypeFromFile(file)})`);
+  };
+
+  const handleUpdateLesson = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!moduleId || !editingLessonId || !editLessonTitle.trim()) return;
+
+    const currentLesson = lessons.find((lesson) => lesson.id === editingLessonId);
+    if (!currentLesson) {
+      setErrorMsg("Lesson not found.");
+      return;
+    }
+
+    const keepsExistingMedia =
+      Boolean(currentLesson.mediaUrl) && !editLessonRemoveMedia;
+    const hasMediaAfterSave = keepsExistingMedia || Boolean(editLessonMediaFile);
+    if (!editLessonContent.trim() && !hasMediaAfterSave) {
+      setErrorMsg("Add lesson text, keep media, or upload new media before saving.");
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      const uploadedMedia = editLessonMediaFile
+        ? await uploadLessonMedia(moduleId, editLessonMediaFile)
+        : null;
+      const mediaFields = uploadedMedia
+        ? uploadedMedia
+        : editLessonRemoveMedia
+          ? {
+              mediaUrl: deleteField(),
+              mediaPath: deleteField(),
+              mediaBucket: deleteField(),
+              mediaName: deleteField(),
+              mediaType: deleteField(),
+            }
+          : {};
+
+      await updateDoc(doc(db, `Modules/${moduleId}/Lessons/${editingLessonId}`), {
+        title: editLessonTitle.trim(),
+        content: editLessonContent.trim(),
+        updatedAt: new Date().toISOString(),
+        ...mediaFields,
+      });
+
+      if ((uploadedMedia || editLessonRemoveMedia) && currentLesson.mediaPath) {
+        await deleteLessonMedia(currentLesson.mediaPath, currentLesson.mediaBucket);
+      }
+
+      setLessons((prev) =>
+        prev.map((lesson) => {
+          if (lesson.id !== editingLessonId) return lesson;
+
+          const baseLesson = {
+            ...lesson,
+            title: editLessonTitle.trim(),
+            content: editLessonContent.trim(),
+          };
+
+          if (uploadedMedia) {
+            return {
+              ...baseLesson,
+              ...uploadedMedia,
+            };
+          }
+
+          if (editLessonRemoveMedia) {
+            return {
+              id: baseLesson.id,
+              moduleId: baseLesson.moduleId,
+              title: baseLesson.title,
+              content: baseLesson.content,
+              createdAt: baseLesson.createdAt,
+            };
+          }
+
+          return baseLesson;
+        }),
+      );
+      resetLessonEdit();
+      setSuccessMsg("Lesson updated.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update lesson.";
+      setErrorMsg(message);
       console.error(err);
     } finally {
       setLoading(false);
@@ -440,6 +626,42 @@ export default function StaffModuleManager() {
     }
   };
 
+  const handleDeleteLesson = async (lesson: Lesson) => {
+    if (!moduleId) return;
+    const confirmed = window.confirm(
+      `Delete "${lesson.title}" from this module?`,
+    );
+    if (!confirmed) return;
+
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      await deleteDoc(doc(db, `Modules/${moduleId}/Lessons/${lesson.id}`));
+      await updateDoc(doc(db, "Modules", moduleId), {
+        lessonCount: increment(-1),
+      });
+      if (lesson.mediaPath) {
+        await deleteLessonMedia(lesson.mediaPath, lesson.mediaBucket);
+      }
+      setLessons((prev) => prev.filter((item) => item.id !== lesson.id));
+      setModuleData((prev) =>
+        prev
+          ? {
+              ...prev,
+              lessonCount: Math.max(0, (prev.lessonCount ?? 1) - 1),
+            }
+          : prev,
+      );
+      setSuccessMsg("Lesson deleted.");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Failed to delete lesson.");
+    } finally {
+      setLoading(false);
+      setTimeout(() => setSuccessMsg(""), 3000);
+    }
+  };
+
   const handleDeleteModule = async () => {
     if (!moduleId) return;
     const confirmed = window.confirm(
@@ -640,16 +862,170 @@ export default function StaffModuleManager() {
                   {lessons.map((lesson, idx) => (
                     <div
                       key={lesson.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-gray-100 bg-gray-50"
+                      className="rounded-lg border border-gray-100 bg-gray-50 p-4"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm">
-                          {idx + 1}
+                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm">
+                            {idx + 1}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">
+                              {lesson.title}
+                            </h3>
+                            {lesson.mediaType && (
+                              <p className="mt-1 text-xs font-medium capitalize text-gray-500">
+                                Includes {lesson.mediaType}: {lesson.mediaName}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <h3 className="font-semibold text-gray-900">
-                          {lesson.title}
-                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startLessonEdit(lesson)}
+                            disabled={loading}
+                            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteLesson(lesson)}
+                            disabled={loading}
+                            className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </button>
+                        </div>
                       </div>
+                      {editingLessonId === lesson.id && (
+                        <form
+                          onSubmit={handleUpdateLesson}
+                          className="mt-5 space-y-5 rounded-xl border border-primary-100 bg-white p-5"
+                        >
+                          <div>
+                            <label
+                              className="mb-1 block text-sm font-medium text-gray-700"
+                              htmlFor={`editLessonTitle-${lesson.id}`}
+                            >
+                              Lesson title
+                            </label>
+                            <input
+                              id={`editLessonTitle-${lesson.id}`}
+                              type="text"
+                              required
+                              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                              value={editLessonTitle}
+                              onChange={(e) =>
+                                setEditLessonTitle(e.target.value)
+                              }
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-1 block text-sm font-medium text-gray-700"
+                              htmlFor={`editLessonContent-${lesson.id}`}
+                            >
+                              Lesson content
+                            </label>
+                            <textarea
+                              id={`editLessonContent-${lesson.id}`}
+                              rows={8}
+                              className="w-full rounded-lg border border-gray-300 px-4 py-2 font-mono text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                              value={editLessonContent}
+                              onChange={(e) =>
+                                setEditLessonContent(e.target.value)
+                              }
+                              placeholder="Update text content, or keep this empty for a media-only lesson."
+                            />
+                          </div>
+                          <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">
+                                  Lesson media
+                                </p>
+                                {lesson.mediaUrl && !editLessonRemoveMedia && (
+                                  <p className="mt-1 text-sm text-gray-500">
+                                    Current: {lesson.mediaName || "uploaded media"}
+                                  </p>
+                                )}
+                                {editLessonRemoveMedia && (
+                                  <p className="mt-1 text-sm font-medium text-red-700">
+                                    Current media will be removed on save.
+                                  </p>
+                                )}
+                                {editLessonMediaName && (
+                                  <p className="mt-1 text-sm font-medium text-primary-700">
+                                    Replacement: {editLessonMediaName}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                                  <Upload className="h-4 w-4" />
+                                  Replace media
+                                  <input
+                                    key={editLessonMediaInputKey}
+                                    type="file"
+                                    accept="video/*,audio/*"
+                                    className="hidden"
+                                    onChange={handleEditLessonMediaChange}
+                                    disabled={loading}
+                                  />
+                                </label>
+                                {lesson.mediaUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditLessonRemoveMedia(
+                                        (remove) => !remove,
+                                      );
+                                      setEditLessonMediaFile(null);
+                                      setEditLessonMediaName("");
+                                      setEditLessonMediaInputKey(
+                                        (prev) => prev + 1,
+                                      );
+                                    }}
+                                    disabled={loading}
+                                    className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-50 ${
+                                      editLessonRemoveMedia
+                                        ? "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                                        : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                                    }`}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    {editLessonRemoveMedia
+                                      ? "Keep media"
+                                      : "Remove media"}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="submit"
+                              disabled={loading}
+                              className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+                            >
+                              <Save className="h-4 w-4" />
+                              {loading ? "Saving..." : "Save lesson"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={resetLessonEdit}
+                              disabled={loading}
+                              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -695,6 +1071,42 @@ export default function StaffModuleManager() {
                   </label>
                 </div>
               </div>
+              <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      Upload video or audio
+                    </p>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Supabase Storage hosts the file so learners can stream it
+                      and download it with the lesson.
+                    </p>
+                    {!isSupabaseConfigured() && (
+                      <p className="mt-2 text-xs font-medium text-amber-700">
+                        Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY before
+                        uploading media.
+                      </p>
+                    )}
+                    {lessonMediaName && (
+                      <p className="mt-2 text-xs font-medium text-primary-700">
+                        Selected: {lessonMediaName}
+                      </p>
+                    )}
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                    <Upload className="h-4 w-4" />
+                    Select media
+                    <input
+                      key={lessonMediaInputKey}
+                      type="file"
+                      accept="video/*,audio/*"
+                      className="hidden"
+                      onChange={handleLessonMediaChange}
+                      disabled={loading}
+                    />
+                  </label>
+                </div>
+              </div>
               <div>
                 <label
                   className="block text-sm font-medium text-gray-700 mb-1"
@@ -721,12 +1133,11 @@ export default function StaffModuleManager() {
                 </label>
                 <textarea
                   id="lesContent"
-                  required
                   rows={8}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 font-mono text-sm"
                   value={lesContent}
                   onChange={(e) => setLesContent(e.target.value)}
-                  placeholder="Content here..."
+                  placeholder="Add text content here, or save a media-only lesson after uploading video or audio."
                 />
               </div>
               <button

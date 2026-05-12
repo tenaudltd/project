@@ -26,6 +26,10 @@ export interface Lesson {
   title: string;
   content: string;
   mediaUrl?: string;
+  mediaPath?: string;
+  mediaBucket?: string;
+  mediaName?: string;
+  mediaType?: "video" | "audio" | "file";
   createdAt: string;
 }
 
@@ -71,8 +75,29 @@ export interface Announcement {
 export interface Feedback {
   id: string;
   userId: string;
+  userName?: string;
+  userEmail?: string;
   message: string;
+  status?: "open" | "responded";
+  response?: string;
+  respondedAt?: string;
+  respondedBy?: string;
+  responderName?: string;
   dateSubmitted: string;
+}
+
+export interface SiteContent {
+  homeEyebrow: string;
+  homeTitle: string;
+  homeDescription: string;
+  aboutEyebrow: string;
+  aboutTitle: string;
+  aboutDescription: string;
+  aboutFocusTitle: string;
+  aboutFocusBody: string;
+  aboutOutcome: string;
+  updatedAt?: string;
+  updatedBy?: string;
 }
 
 export interface ModuleProgress {

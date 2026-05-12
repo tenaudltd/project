@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { LogOut, Menu, UserCircle } from "lucide-react";
 import BrandLogo from "../brand/BrandLogo";
@@ -12,13 +13,19 @@ export default function Navbar({
 }) {
   const { currentUser, userProfile, signOut } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const handleSignOut = async () => {
     try {
+      setSigningOut(true);
       await signOut();
+      setMenuOpen(false);
       navigate("/login");
     } catch (error) {
       console.error("Failed to sign out", error);
+    } finally {
+      setSigningOut(false);
     }
   };
 
@@ -74,11 +81,21 @@ export default function Navbar({
               <span className="hidden items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-ink-700 xl:flex">
                 <span className="font-medium">{userProfile?.fullName || "User"}</span>
               </span>
-              <div className="relative group">
-                <button className="flex items-center gap-2 rounded-xl border border-ink-100 bg-slate-50 px-3 py-2 text-ink-700 hover:bg-slate-100">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  className="flex items-center gap-2 rounded-xl border border-ink-100 bg-slate-50 px-3 py-2 text-ink-700 hover:bg-slate-100"
+                  aria-expanded={menuOpen}
+                  aria-label="Open user menu"
+                >
                   <UserCircle className="h-5 w-5" />
                 </button>
-                <div className="absolute right-0 top-full mt-3 hidden w-60 flex-col rounded-2xl border border-ink-100 bg-white p-2 shadow-[0_18px_40px_rgba(11,26,31,0.12)] group-hover:flex">
+                <div
+                  className={`absolute right-0 top-full mt-3 w-60 flex-col rounded-2xl border border-ink-100 bg-white p-2 shadow-[0_18px_40px_rgba(11,26,31,0.12)] ${
+                    menuOpen ? "flex" : "hidden"
+                  }`}
+                >
                   <div className="border-b border-ink-100 px-4 py-3">
                     <p className="truncate text-sm font-medium text-ink-900">
                       {userProfile?.fullName}
@@ -88,11 +105,13 @@ export default function Navbar({
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={handleSignOut}
-                    className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-left text-sm font-medium text-coral-700 hover:bg-coral-50"
+                    disabled={signingOut}
+                    className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-left text-sm font-medium text-coral-700 hover:bg-coral-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <LogOut className="h-4 w-4" />
-                    Sign out
+                    {signingOut ? "Signing out..." : "Sign out"}
                   </button>
                 </div>
               </div>

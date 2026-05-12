@@ -1,6 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { ArrowRight, Award, BookOpen, Megaphone, Users } from "lucide-react";
 import BrandLogo from "../components/brand/BrandLogo";
+import { doc, getDoc } from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
+import { db } from "../lib/firebase";
+import { defaultSiteContent, mergeSiteContent } from "../lib/siteContent";
+import type { SiteContent } from "../lib/types";
 
 const highlights = [
   {
@@ -26,21 +32,47 @@ const highlights = [
 ];
 
 export default function Home() {
+  const { currentUser, loading } = useAuth();
+  const [siteContent, setSiteContent] =
+    useState<SiteContent>(defaultSiteContent);
+
+  useEffect(() => {
+    const fetchSiteContent = async () => {
+      try {
+        const snapshot = await getDoc(doc(db, "SiteContent", "public"));
+        if (snapshot.exists()) {
+          setSiteContent(mergeSiteContent(snapshot.data()));
+        }
+      } catch (error) {
+        console.error("Error fetching site content:", error);
+      }
+    };
+    void fetchSiteContent();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-100 border-t-primary-600" />
+      </div>
+    );
+  }
+
+  if (currentUser) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="page-shell">
       <section className="page-header">
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <span className="eyebrow">Civic learning platform</span>
+            <span className="eyebrow">{siteContent.homeEyebrow}</span>
             <BrandLogo className="mt-5" />
             <h1 className="page-title max-w-3xl">
-              Learn how local government works without fighting the interface.
+              {siteContent.homeTitle}
             </h1>
-            <p className="page-description">
-              CivicEd Mushindamo gives residents a simple way to study modules,
-              follow announcements, and track progress from one consistent
-              platform.
-            </p>
+            <p className="page-description">{siteContent.homeDescription}</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link to="/register" className="button-primary gap-2">
                 Create account
